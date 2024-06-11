@@ -1,0 +1,42 @@
+{
+  "type": "object",
+  "properties": {
+    "code": {
+      "type": "string",
+      "minLength": 1
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1
+    },
+    "description": {
+      "type": "string",
+      "minLength": 1
+    },
+    "modelId": {
+      "type": "integer",
+      "minLength": 1
+    },
+    "fournisseurId": {
+      "type": "integer",
+      "minLength": 1
+    },
+    "pv": {
+      "type": "integer",
+      "minLength": 2
+    },
+    "stock_min": {
+      "type": "integer",
+      "minLength": 1
+    }
+  },
+  "required": [
+    "code",
+    "name",
+    "fournisseurId",
+    "modelId",
+    "pv",
+    "stock_min"
+  ],
+  "additionalProperties": false
+}

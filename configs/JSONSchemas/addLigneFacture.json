@@ -1,0 +1,33 @@
+{
+  "type": "object",
+  "properties": {
+    "productId": {
+      "type": "integer",
+      "minLength": 1
+    },
+    "facture_id": {
+      "type": "integer",
+      "minLength": 1
+    },
+    "pv": {
+      "type": "integer",
+      "minLength": 1
+    },
+    "stock": {
+      "type": "string",
+      "minLength": 1
+    },
+    "quantity": {
+      "type": "integer",
+      "minLength": 1
+    }
+  },
+  "required": [
+    "productId",
+    "facture_id",
+    "pv",
+    "stock",
+    "quantity"
+  ],
+  "additionalProperties": false
+}

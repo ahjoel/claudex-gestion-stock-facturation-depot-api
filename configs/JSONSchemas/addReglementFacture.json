@@ -1,0 +1,18 @@
+{
+  "type": "object",
+  "properties": {
+    "facture_id": {
+      "type": "integer",
+      "minLength": 1
+    },
+    "total": {
+      "type": "integer",
+      "minLength": 1
+    }
+  },
+  "required": [
+    "facture_id",
+    "total"
+  ],
+  "additionalProperties": false
+}

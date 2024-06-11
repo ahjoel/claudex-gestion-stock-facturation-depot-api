@@ -1,0 +1,520 @@
+const {logger} = require("../utils/logger");
+const factureRepository = require("../repositories/factureRepository");
+const genericJsonResponse = require("../models/genericResponseModel");
+const JsonValidator = require("ajv");
+const jsonValidator = new JsonValidator();
+
+function sendResponse(response, status, message, description, data, httpStatus) {
+    httpStatus = httpStatus != null ? httpStatus : status;
+    response.status(httpStatus).json(new genericJsonResponse(status, message, description, data));
+}
+
+exports.addFacture = async (request, response) => {
+    try {
+        const schema = require("../configs/JSONSchemas/addFacture.json");
+        const valid = jsonValidator.validate(schema, request.body);
+        if (!valid) {
+            return sendResponse(
+                response,
+                400,
+                "FAILURE",
+                jsonValidator.errors[0].message,
+                null
+            );
+        }
+        const factureObject = {
+            code: request.body.code,
+            client: request.body.client,
+            tax: request.body.tax,
+            createdBy: request.authUserId,
+        };
+        const result = await factureRepository.save(factureObject);
+        const savedFacture = await factureRepository.findById(result.insertId);
+        sendResponse(
+            response,
+            200,
+            "SUCCESS",
+            "Request executed successfully",
+            savedFacture
+        );
+    } catch (e) {
+        logger.error(request.correlationId + " ==> Error caught in [addFacture Factures] ==> " + e.stack);
+        sendResponse(
+            response,
+            500,
+            "ERROR",
+            "An error occurred while processing the request addFacture Factures",
+            null
+        );
+    }
+};
+
+exports.addReglementFacture = async (request, response) => {
+    try {
+        const schema = require("../configs/JSONSchemas/addReglementFacture.json");
+        const valid = jsonValidator.validate(schema, request.body);
+        if (!valid) {
+            return sendResponse(
+                response,
+                400,
+                "FAILURE",
+                jsonValidator.errors[0].message,
+                null
+            );
+        }
+        const factureObject = {
+            facture_id: request.body.facture_id,
+            total: request.body.total,
+            createdBy: request.authUserId,
+        };
+        const result = await factureRepository.regler(factureObject);
+        const savedReglementFacture = await factureRepository.findByIdReglement(result.insertId);
+        sendResponse(
+            response,
+            200,
+            "SUCCESS",
+            "Request executed successfully",
+            savedReglementFacture
+        );
+    } catch (e) {
+        logger.error(request.correlationId + " ==> Error caught in [addReglementFacture Factures Reglement] ==> " + e.stack);
+        sendResponse(
+            response,
+            500,
+            "ERROR",
+            "An error occurred while processing the request addReglementFacture Factures Reglement",
+            null
+        );
+    }
+};
+
+exports.addLigneFacture = async (request, response) => {
+    try {
+        const schema = require("../configs/JSONSchemas/addLigneFacture.json");
+        const valid = jsonValidator.validate(schema, request.body);
+        if (!valid) {
+            return sendResponse(
+                response,
+                400,
+                "FAILURE",
+                jsonValidator.errors[0].message,
+                null
+            );
+        }
+        const factureLigneObject = {
+            productId: request.body.productId,
+            facture_id: request.body.facture_id,
+            pv: request.body.pv,
+            stock: request.body.stock,
+            qte: request.body.quantity,
+            types: "OUT",
+            createdBy: request.authUserId,
+        };
+        const result = await factureRepository.saveLigneFacture(factureLigneObject);
+        const savedLigneFacture = await factureRepository.findLigneFactureById(result.insertId);
+        sendResponse(
+            response,
+            200,
+            "SUCCESS",
+            "Request executed successfully",
+            savedLigneFacture
+        );
+    } catch (e) {
+        logger.error(request.correlationId + " ==> Error caught in [addFacture Factures] ==> " + e.stack);
+        sendResponse(
+            response,
+            500,
+            "ERROR",
+            "An error occurred while processing the request addFacture Factures",
+            null
+        );
+    }
+};
+
+exports.updateFacture = async (request, response) => {
+    try {
+        const factureObject = request.body;
+        factureObject.updatedBy = request.authUserId;
+
+        const result = await factureRepository.update(factureObject);
+        if (!result.affectedRows) {
+            sendResponse(response, 404, "FAILURE", "Facture not found", null);
+        } else {
+            const updatedFacture = await factureRepository.findById(request.body.id);
+            sendResponse(
+                response,
+                200,
+                "SUCCESS",
+                "Request executed successfully",
+                updatedFacture
+            );
+        }
+    } catch (e) {
+        logger.error(request.correlationId + " ==> Error caught in [updateFacture Facture] ==> " + e.stack);
+        sendResponse(
+            response,
+            500,
+            "ERROR",
+            "An error occurred while processing the request updateFacture Facture",
+            null
+        );
+    }
+};
+
+exports.findFacture = async (request, response) => {
+    try {
+        const facture = await factureRepository.findById(request.query.id);
+        if (!model) {
+            sendResponse(response, 404, "SUCCESS", "Facture not found", null);
+        } else {
+            sendResponse(
+                response,
+                200,
+                "SUCCESS",
+                "Request executed successfully",
+                facture
+            );
+        }
+    } catch (e) {
+        logger.error(request.correlationId + " ==> Error caught in [findFacture Facture not found] ==> " + e.stack);
+        sendResponse(
+            response,
+            500,
+            "ERROR",
+            "An error occurred while processing the request findFacture Facture not found",
+            null
+        );
+    }
+};
+
+exports.findAll = async (request, response) => {
+    try {
+        const page = request.query.page;
+        const length = request.query.length;
+
+        if (page === undefined || page === null || page === '') {
+            return sendResponse(
+                response,
+                400,
+                "FAILURE",
+                "page attribute required",
+                null
+            );
+        }
+
+        if (length === undefined || length === null || length === '') {
+            return sendResponse(
+                response,
+                400,
+                "FAILURE",
+                "length attribute required",
+                null
+            );
+        }
+
+        const limit = parseInt(length);
+        const offset = (parseInt(page) - 1) * parseInt(length);
+
+        const factures = await factureRepository.findAll(limit, offset);
+        const allFacturesCount = await factureRepository.countFindAllFacture();
+
+        return sendResponse(
+            response,
+            200,
+            "SUCCESS",
+            "Request executed successfully",
+            {
+                fournisseursNumber: allFacturesCount.facturesNumber,
+                factures: factures
+            }
+        );
+    } catch (e) {
+        logger.error(request.correlationId + " ==> Error caught in [findAll Factures] ==> " + e.stack);
+        sendResponse(
+            response,
+            500,
+            "ERROR",
+            "An error occurred while processing the request findAll Factures",
+            null
+        );
+    }
+};
+
+exports.findAllFactureR1 = async (request, response) => {
+    try {
+        const page = request.query.page;
+        const length = request.query.length;
+
+        if (page === undefined || page === null || page === '') {
+            return sendResponse(
+                response,
+                400,
+                "FAILURE",
+                "page attribute required",
+                null
+            );
+        }
+
+        if (length === undefined || length === null || length === '') {
+            return sendResponse(
+                response,
+                400,
+                "FAILURE",
+                "length attribute required",
+                null
+            );
+        }
+
+        const limit = parseInt(length);
+        const offset = (parseInt(page) - 1) * parseInt(length);
+        const facturesR1 = await factureRepository.findAllFacturesR1(limit, offset);
+        const allFacturesCount = await factureRepository.countFindAllFactureR1();
+
+        return sendResponse(
+            response,
+            200,
+            "SUCCESS",
+            "Request executed successfully",
+            {
+                factureTotalR1Number: allFacturesCount.factureTotalR1Number,
+                facturesR1: facturesR1
+            }
+        );
+    } catch (e) {
+        logger.error(request.correlationId + " ==> Error caught in [findAllFactureR1 Factures] ==> " + e.stack);
+        sendResponse(
+            response,
+            500,
+            "ERROR",
+            "An error occurred while processing the request findAllFactureR1 Factures",
+            null
+        );
+    }
+};
+
+exports.findAllFactureRC = async (request, response) => {
+    try {
+        const page = request.query.page;
+        const length = request.query.length;
+
+        if (page === undefined || page === null || page === '') {
+            return sendResponse(
+                response,
+                400,
+                "FAILURE",
+                "page attribute required",
+                null
+            );
+        }
+
+        if (length === undefined || length === null || length === '') {
+            return sendResponse(
+                response,
+                400,
+                "FAILURE",
+                "length attribute required",
+                null
+            );
+        }
+
+        const limit = parseInt(length);
+        const offset = (parseInt(page) - 1) * parseInt(length);
+        const facturesRC = await factureRepository.findAllFacturesRC("RC", limit, offset);
+        const allFacturesCount = await factureRepository.countFindAllFactureRC();
+
+        return sendResponse(
+            response,
+            200,
+            "SUCCESS",
+            "Request executed successfully",
+            {
+                factureTotalRCNumber: allFacturesCount.factureTotalRCNumber,
+                facturesRC: facturesRC
+            }
+        );
+    } catch (e) {
+        logger.error(request.correlationId + " ==> Error caught in [findAllFactureRC Factures] ==> " + e.stack);
+        sendResponse(
+            response,
+            500,
+            "ERROR",
+            "An error occurred while processing the request findAllFactureRC Factures",
+            null
+        );
+    }
+};
+
+exports.findAllFactureOneR1 = async (request, response) => {
+    try {
+        const id = request.query.id;
+        if (id === undefined || id === null || id === '') {
+            return sendResponse(
+                response,
+                400,
+                "FAILURE",
+                "id attribute required",
+                null
+            );
+        }
+        const oneFacture = await factureRepository.findById(id);
+        sendResponse(
+            response,
+            200,
+            "SUCCESS",
+            "Request executed successfully",
+            {
+                oneFacture: oneFacture
+            }
+        );
+    } catch (e) {
+        logger.error(request.correlationId + " ==> Error caught in [findAllFactureOneR1 Factures-Details] ==> " + e.stack);
+        sendResponse(
+            response,
+            500,
+            "ERROR",
+            "An error occurred while processing the request findAllFactureOneR1 Factures-Details",
+            null
+        );
+    }
+};
+
+exports.findAllFactureOneRC = async (request, response) => {
+    try {
+        const id = request.query.id;
+        if (id === undefined || id === null || id === '') {
+            return sendResponse(
+                response,
+                400,
+                "FAILURE",
+                "id attribute required",
+                null
+            );
+        }
+        const oneFacture = await factureRepository.findById(id);
+        sendResponse(
+            response,
+            200,
+            "SUCCESS",
+            "Request executed successfully",
+            {
+                oneFacture: oneFacture
+            }
+        );
+    } catch (e) {
+        logger.error(request.correlationId + " ==> Error caught in [findAllFactureOneRC Factures-Details] ==> " + e.stack);
+        sendResponse(
+            response,
+            500,
+            "ERROR",
+            "An error occurred while processing the request findAllFactureOneRC Factures-Details",
+            null
+        );
+    }
+};
+
+exports.findAllDetailFactureR1 = async (request, response) => {
+    try {
+        const code = request.query.code;
+
+        if (code === undefined || code === null || code === '') {
+            return sendResponse(
+                response,
+                400,
+                "FAILURE",
+                "code attribute required",
+                null
+            );
+        }
+
+        const facturesDetailR1 = await factureRepository.findAllDetailFacturesR1(code);
+
+        return sendResponse(
+            response,
+            200,
+            "SUCCESS",
+            "Request executed successfully",
+            {
+                facturesDetailR1: facturesDetailR1
+            }
+        );
+    } catch (e) {
+        logger.error(request.correlationId + " ==> Error caught in [findAllDetailFactureR1 Factures - All products] ==> " + e.stack);
+        sendResponse(
+            response,
+            500,
+            "ERROR",
+            "An error occurred while processing the request findAllDetailFactureR1 Factures All products",
+            null
+        );
+    }
+};
+
+exports.findAllDetailFactureRC = async (request, response) => {
+    try {
+        const code = request.query.code;
+
+        if (code === undefined || code === null || code === '') {
+            return sendResponse(
+                response,
+                400,
+                "FAILURE",
+                "code attribute required",
+                null
+            );
+        }
+
+        const facturesDetailRC = await factureRepository.findAllDetailFacturesRC("RC", code);
+
+        return sendResponse(
+            response,
+            200,
+            "SUCCESS",
+            "Request executed successfully",
+            {
+                facturesDetailRC: facturesDetailRC
+            }
+        );
+    } catch (e) {
+        logger.error(request.correlationId + " ==> Error caught in [findAllDetailFactureRC Factures - All products] ==> " + e.stack);
+        sendResponse(
+            response,
+            500,
+            "ERROR",
+            "An error occurred while processing the request findAllDetailFactureRC Factures All products",
+            null
+        );
+    }
+};
+
+exports.deleteFacture = async (request, response) => {
+    try {
+        const id = request.query.id;
+        if (!id) {
+            sendResponse(
+                response,
+                400,
+                "FAILURE",
+                "The id query param is required",
+                null
+            );
+        }
+        await factureRepository.delete(id);
+        sendResponse(
+            response,
+            200,
+            "SUCCESS",
+            "Request executed successfully",
+            null
+        );
+
+    } catch (e) {
+        logger.error(request.correlationId + " ==> Error caught in [deleteFacture] ==> " + e.stack);
+        sendResponse(
+            response,
+            500,
+            "ERROR",
+            "An error occurred while processing the request deleteFacture",
+            null
+        );
+    }
+};
