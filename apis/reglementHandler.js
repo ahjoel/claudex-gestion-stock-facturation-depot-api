@@ -156,3 +156,53 @@ exports.findAll = async (request, response) => {
         );
     }
 };
+
+exports.findAllReglementMonth = async (request, response) => {
+    try {
+        const allReglementsCount = await reglementRepository.countFindAllReglementMonth();
+
+        return sendResponse(
+            response,
+            200,
+            "SUCCESS",
+            "Request executed successfully",
+            {
+                reglementMonthTotalNumber: allReglementsCount.reglementMonthTotalNumber
+            }
+        );
+    } catch (e) {
+        logger.error(request.correlationId + " ==> Error caught in [findAllReglementMonth Reglements] ==> " + e.stack);
+        sendResponse(
+            response,
+            500,
+            "ERROR",
+            "An error occurred while processing the request findAllReglementMonth Reglements",
+            null
+        );
+    }
+};
+
+exports.findAllReglementDay = async (request, response) => {
+    try {
+        const allReglementsCount = await reglementRepository.countFindAllReglementDay();
+
+        return sendResponse(
+            response,
+            200,
+            "SUCCESS",
+            "Request executed successfully",
+            {
+                reglementDayTotalNumber: allReglementsCount.reglementDayTotalNumber
+            }
+        );
+    } catch (e) {
+        logger.error(request.correlationId + " ==> Error caught in [findAllReglementDay Reglements] ==> " + e.stack);
+        sendResponse(
+            response,
+            500,
+            "ERROR",
+            "An error occurred while processing the request findAllReglementDay Reglements",
+            null
+        );
+    }
+};

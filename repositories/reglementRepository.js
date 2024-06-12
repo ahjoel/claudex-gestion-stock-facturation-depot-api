@@ -1,7 +1,6 @@
 const db = require("../configs/db/claudexBars");
 
 class ReglementRepository {
-
   async delete(reglementId) {
     return await db.claudexBarsDB.query("DELETE FROM reglements WHERE id = ?", [
       reglementId,
@@ -49,6 +48,28 @@ class ReglementRepository {
             where r.deleted_at is null 
             and r.deleted_by is null 
         ) as sous_requete
+        `)
+    )[0];
+  }
+
+  async countFindAllReglementMonth() {
+    return (
+      await db.claudexBarsDB.query(`
+        SELECT CAST(SUM(totalFacture)AS VARCHAR(255)) AS reglementMonthTotalNumber 
+        FROM reglements
+        WHERE YEAR(reglements.created_at) = YEAR(CURDATE())
+        AND MONTH(reglements.created_at) = MONTH(CURDATE());
+        `)
+    )[0];
+  }
+
+  async countFindAllReglementDay() {
+    return (
+      await db.claudexBarsDB.query(`
+        SELECT CAST(SUM(totalFacture)AS VARCHAR(255)) AS reglementDayTotalNumber 
+        FROM reglements
+        WHERE YEAR(reglements.created_at) = YEAR(CURDATE())
+        AND day (reglements.created_at) = day(CURDATE());
         `)
     )[0];
   }

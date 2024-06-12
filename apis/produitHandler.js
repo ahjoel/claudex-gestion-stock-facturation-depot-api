@@ -164,6 +164,31 @@ exports.findAll = async (request, response) => {
     }
 };
 
+exports.findCountProducts = async (request, response) => {
+    try {
+        const allProduitsCount = await produitRepository.countFindAllProduit();
+
+        return sendResponse(
+            response,
+            200,
+            "SUCCESS",
+            "Request executed successfully",
+            {
+                produitNumber: allProduitsCount.produitNumber,
+            }
+        );
+    } catch (e) {
+        logger.error(request.correlationId + " ==> Error caught in [findCountProducts Produits] ==> " + e.stack);
+        sendResponse(
+            response,
+            500,
+            "ERROR",
+            "An error occurred while processing the request",
+            null
+        );
+    }
+};
+
 exports.deleteProduit = async (request, response) => {
     try {
         const id = request.query.id;

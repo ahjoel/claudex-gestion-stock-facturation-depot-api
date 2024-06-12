@@ -292,6 +292,32 @@ exports.findAllFactureR1 = async (request, response) => {
     }
 };
 
+exports.findCountAllFactureImpaye = async (request, response) => {
+    try {
+        
+        const allFacturesCount = await factureRepository.countFindAllFactureImpayee();
+
+        return sendResponse(
+            response,
+            200,
+            "SUCCESS",
+            "Request executed successfully",
+            {
+                factureTotalImpayeeNumber: allFacturesCount.factureTotalImpayeNumber
+            }
+        );
+    } catch (e) {
+        logger.error(request.correlationId + " ==> Error caught in [findCountAllFactureImpaye Factures] ==> " + e.stack);
+        sendResponse(
+            response,
+            500,
+            "ERROR",
+            "An error occurred while processing the request findCountAllFactureImpaye Factures",
+            null
+        );
+    }
+};
+
 exports.findAllFactureRC = async (request, response) => {
     try {
         const page = request.query.page;

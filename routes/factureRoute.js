@@ -8,6 +8,7 @@ module.exports = function (app) {
     app.get("/claudex_bars/v1/factures", [authController.verifyToken], factureHandler.findFacture);
     app.put("/claudex_bars/v1/factures", [authController.verifyToken], factureHandler.updateFacture);
     app.get("/claudex_bars/v1/factures/all", [authController.verifyToken], factureHandler.findAllFactureR1);
+    app.get("/claudex_bars/v1/factures/impayee/count", [authController.verifyToken], factureHandler.findCountAllFactureImpaye);
     app.get("/claudex_bars/v1/factures/one", [authController.verifyToken], factureHandler.findAllFactureOneR1);
     app.get("/claudex_bars/v1/factures/detail/all", [authController.verifyToken], factureHandler.findAllDetailFactureR1);
     app.delete("/claudex_bars/v1/factures", [authController.verifyToken], factureHandler.deleteFacture);

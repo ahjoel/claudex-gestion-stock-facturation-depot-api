@@ -141,6 +141,24 @@ class FactureRepository {
         `))[0];
     }
 
+    async countFindAllFactureImpayee() {
+        return (await db.claudexBarsDB.query(`
+        SELECT CAST(count(sous_requete.id) AS VARCHAR(255)) AS factureTotalImpayeNumber 
+        FROM (
+            SELECT f2.id as id,
+                CASE WHEN r.facture_id IS NOT NULL THEN 'payée' ELSE 'impayée' END AS statut
+            FROM mouvements m
+            INNER JOIN factures f2 ON m.facture_id = f2.id 
+            INNER JOIN produits p2 ON m.produit_id = p2.id
+            LEFT JOIN reglements r ON f2.id = r.facture_id
+            WHERE m.deleted_at IS NULL
+            GROUP BY f2.id 
+            HAVING statut = 'impayée'
+            ORDER BY f2.id DESC
+        ) as sous_requete;
+        `))[0];
+    }
+
     async countFindAllFactureRC() {
         return (await db.claudexBarsDB.query(`
         SELECT CAST(count(sous_requete.id) AS VARCHAR(255)) AS factureTotalRCNumber 
