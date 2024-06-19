@@ -122,6 +122,7 @@ app.listen(PORT, () =>
 
 require("./routes/userRoutes")(app);
 require("./routes/modelRoute")(app);
+require("./routes/clientRoute")(app);
 require("./routes/fournisseurRoute")(app);
 require("./routes/produitRoute")(app);
 require("./routes/mouvementEntreeR1Route")(app);

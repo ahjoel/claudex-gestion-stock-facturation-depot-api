@@ -24,10 +24,11 @@ class ReglementRepository {
   async findAll(limit, offset) {
     return await db.claudexBarsDB.query(
       `
-                SELECT r.id, r.created_at AS createdAt, u.firstname, u.lastname, f.code as codeFacture, f.client as client, r.totalFacture as totalFacture 
+                SELECT r.id, r.created_at AS createdAt, u.firstname, u.lastname, f.code as codeFacture, c.name as client, r.totalFacture as totalFacture 
                 FROM reglements r 
                 inner join factures f ON r.facture_id = f.id 
                 inner join users u on r.created_by = u.id 
+                inner join clients c on f.client_id = c.id 
                 where r.deleted_at is null 
                 and r.deleted_by is null 
                 ORDER BY r.id DESC LIMIT ? OFFSET ?
@@ -41,10 +42,11 @@ class ReglementRepository {
       await db.claudexBarsDB.query(`
         SELECT CAST(count(sous_requete.id) AS VARCHAR(255)) AS reglementTotalNumber 
         FROM (
-            SELECT r.id, r.created_at AS createdAt, u.firstname, u.lastname, f.code as codeFacture, f.client as client, r.totalFacture as totalFacture 
+            SELECT r.id, r.created_at AS createdAt, u.firstname, u.lastname, f.code as codeFacture, c.name as client, r.totalFacture as totalFacture 
             FROM reglements r 
             inner join factures f ON r.facture_id = f.id 
             inner join users u on r.created_by = u.id 
+            inner join clients c on f.client_id = c.id 
             where r.deleted_at is null 
             and r.deleted_by is null 
         ) as sous_requete

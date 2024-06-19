@@ -3,6 +3,7 @@ const mouvementEntreeR1Handler = require("../apis/mouvementEntreeR1Handler");
 const authController = require("../controllers/authController");
 
 module.exports = function (app) {
+    // R1
     app.post("/claudex_bars/v1/entreer1", [authController.verifyToken], mouvementEntreeR1Handler.addMouvementEntreeR1);
     app.post("/claudex_bars/v1/sortier1", [authController.verifyToken], mouvementEntreeR1Handler.addMouvementSortieR1);
     app.get("/claudex_bars/v1/entreer1", [authController.verifyToken], mouvementEntreeR1Handler.findMouvementEntreeR1);
@@ -24,4 +25,6 @@ module.exports = function (app) {
     app.delete("/claudex_bars/v1/entreerc", [authController.verifyToken], mouvementEntreeRCHandler.deleteMouvementEntreeRC);
     app.delete("/claudex_bars/v1/sortierc", [authController.verifyToken], mouvementEntreeRCHandler.deleteMouvementSortieRC);
     
+    // A faire
+    app.get("/claudex_bars/v1/caisse/mois", [authController.verifyToken], mouvementEntreeR1Handler.findAllStatCaisseMois);
 }

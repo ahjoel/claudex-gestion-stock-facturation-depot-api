@@ -3,7 +3,7 @@ const db = require("../configs/db/claudexBars");
 class ProduitRepository {
   async save(produit) {
     return await db.claudexBarsDB.query(
-      "INSERT INTO produits (code, name, description, model_id, fournisseur_id, pv, stock_min, created_by, created_at) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, now());",
+      "INSERT INTO produits (code, name, description, model_id, fournisseur_id, pv, stock, stock_min, created_by, created_at) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, now());",
       [
         produit.code,
         produit.name,
@@ -11,6 +11,7 @@ class ProduitRepository {
         produit.modelId,
         produit.fournisseurId,
         produit.pv,
+        produit.stock,
         produit.stock_min,
         produit.createdBy,
       ]
@@ -26,6 +27,7 @@ class ProduitRepository {
                  model_id = CASE WHEN ? IS NOT NULL THEN ? ELSE model_id END,
                  fournisseur_id         = CASE WHEN ? IS NOT NULL THEN ? ELSE fournisseur_id END,
                  pv         = CASE WHEN ? IS NOT NULL THEN ? ELSE pv END,
+                 stock          = CASE WHEN ? IS NOT NULL THEN ? ELSE stock END,
                  stock_min          = CASE WHEN ? IS NOT NULL THEN ? ELSE stock_min END,
                  updated_by        = ?,
                  updated_at        = now()
@@ -43,6 +45,8 @@ class ProduitRepository {
         produit.fournisseurId,
         produit.pv,
         produit.pv,
+        produit.stock,
+        produit.stock,
         produit.stock_min,
         produit.stock_min,
         produit.updatedBy,
@@ -61,6 +65,7 @@ class ProduitRepository {
                     p.model_id      AS modelId,
                     p.fournisseur_id      AS fournisseurId,
                     p.pv,
+                    p.stock,
                     p.stock_min,
                     p.created_at      AS createdAt,
                     p.created_by      AS createdBy,
@@ -90,6 +95,7 @@ class ProduitRepository {
                     p.model_id      AS modelId,
                     p.fournisseur_id      AS fournisseurId,
                     p.pv,
+                    p.stock,
                     p.stock_min,
                     p.created_at      AS createdAt,
                     p.created_by      AS createdBy,
@@ -103,11 +109,44 @@ class ProduitRepository {
                     INNER JOIN fournisseurs f on p.fournisseur_id = f.id
                     INNER JOIN models m on p.model_id = m.id
             WHERE p.deleted_at IS NULL
+            AND p.stock = ?
             GROUP BY p.id 
             ORDER BY p.id DESC
             LIMIT ?
             OFFSET ?`,
-      [limit, offset]
+      ['R1', limit, offset]
+    );
+  }
+
+  async findAllRc(limit, offset) {
+    return await db.claudexBarsDB.query(
+            `SELECT p.id,
+                    p.code,
+                    p.name,
+                    p.description,
+                    p.model_id      AS modelId,
+                    p.fournisseur_id      AS fournisseurId,
+                    p.pv,
+                    p.stock,
+                    p.stock_min,
+                    p.created_at      AS createdAt,
+                    p.created_by      AS createdBy,
+                    p.updated_at      As updatedAt,
+                    p.updated_by      AS updatedBy,
+                    p.deleted_at      As deletedAt,
+                    p.deleted_by      AS deletedBy,
+                    f.name            AS fournisseur,
+                    m.name            AS model
+            FROM produits p    
+                    INNER JOIN fournisseurs f on p.fournisseur_id = f.id
+                    INNER JOIN models m on p.model_id = m.id
+            WHERE p.deleted_at IS NULL
+            AND p.stock = ?
+            GROUP BY p.id 
+            ORDER BY p.id DESC
+            LIMIT ?
+            OFFSET ?`,
+      ['RC', limit, offset]
     );
   }
 
@@ -116,7 +155,16 @@ class ProduitRepository {
       await db.claudexBarsDB
         .query(`SELECT CAST(count(id) AS VARCHAR(255)) AS produitNumber
                                                   FROM produits
-                                                  WHERE deleted_by is null`)
+                                                  WHERE deleted_by is null AND stock='R1' `)
+    )[0];
+  }
+
+  async countFindAllProduitRc() {
+    return (
+      await db.claudexBarsDB
+        .query(`SELECT CAST(count(id) AS VARCHAR(255)) AS produitNumber
+                                                  FROM produits
+                                                  WHERE deleted_by is null AND stock='RC' `)
     )[0];
   }
 

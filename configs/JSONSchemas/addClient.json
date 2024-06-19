@@ -1,23 +1,18 @@
 {
   "type": "object",
   "properties": {
-    "code": {
+    "name": {
       "type": "string",
       "minLength": 1
     },
-    "client_id": {
-      "type": "string",
-      "minLength": 1
-    },
-    "tax": {
+    "description": {
       "type": "string",
       "minLength": 1
     }
   },
   "required": [
-    "code",
-    "client_id",
-    "tax"
+    "name",
+    "description"
   ],
   "additionalProperties": false
 }

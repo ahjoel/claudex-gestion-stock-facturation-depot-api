@@ -307,6 +307,70 @@ exports.findAllMouvementEntreeR1Dispo = async (request, response) => {
     }
 };
 
+exports.findAllStatCaisseMois = async (request, response) => {
+    try {
+    
+        const data = await mouvementRepository.findAllStatReglementParMois();
+        const total = await mouvementRepository.findAllStatReglementParMoisTotal();
+
+        return sendResponse(
+            response,
+            200,
+            "SUCCESS",
+            "Request executed successfully",
+            {
+                Grand_Total: total.Grand_Total,
+                dataCaissMoi: data
+            }
+        );
+    } catch (e) {
+        logger.error(request.correlationId + " ==> Error caught in [findAllMouvementEntreeR1Dispo entreeR1NumberDispo] ==> " + e.stack);
+        sendResponse(
+            response,
+            500,
+            "ERROR",
+            "An error occurred while processing the request",
+            null
+        );
+    }
+};
+
+// exports.deleteMouvementEntreeR1 = async (request, response) => {
+//     try {
+//         const id = request.query.id;
+//         if (!id) {
+//             sendResponse(
+//                 response,
+//                 400,
+//                 "FAILURE",
+//                 "The id query param is required",
+//                 null
+//             );
+//         }
+//         const result = await mouvementRepository.delete(request.authUserId, id);
+//         if (!result.affectedRows) {
+//             sendResponse(response, 404, "FAILURE", "MouvementEntreeR1 not found", null);
+//         } else {
+//             sendResponse(
+//                 response,
+//                 200,
+//                 "SUCCESS",
+//                 "Request executed successfully",
+//                 null
+//             );
+//         }
+//     } catch (e) {
+//         logger.error(request.correlationId + " ==> Error caught in [deleteMouvementEntreeR1] ==> " + e.stack);
+//         sendResponse(
+//             response,
+//             500,
+//             "ERROR",
+//             "An error occurred while processing the request",
+//             null
+//         );
+//     }
+// };
+
 exports.deleteMouvementEntreeR1 = async (request, response) => {
     try {
         const id = request.query.id;
@@ -319,29 +383,27 @@ exports.deleteMouvementEntreeR1 = async (request, response) => {
                 null
             );
         }
-        const result = await mouvementRepository.delete(request.authUserId, id);
-        if (!result.affectedRows) {
-            sendResponse(response, 404, "FAILURE", "MouvementEntreeR1 not found", null);
-        } else {
-            sendResponse(
-                response,
-                200,
-                "SUCCESS",
-                "Request executed successfully",
-                null
-            );
-        }
+        await mouvementRepository.delete(id);
+        sendResponse(
+            response,
+            200,
+            "SUCCESS",
+            "Request executed successfully",
+            null
+        );
+
     } catch (e) {
         logger.error(request.correlationId + " ==> Error caught in [deleteMouvementEntreeR1] ==> " + e.stack);
         sendResponse(
             response,
             500,
             "ERROR",
-            "An error occurred while processing the request",
+            "An error occurred while processing the request deleteMouvementEntreeR1",
             null
         );
     }
 };
+
 
 exports.deleteMouvementSortieR1 = async (request, response) => {
     try {

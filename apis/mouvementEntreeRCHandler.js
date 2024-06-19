@@ -343,6 +343,39 @@ exports.deleteMouvementEntreeRC = async (request, response) => {
     }
 };
 
+exports.deleteMouvementEntreeRC = async (request, response) => {
+    try {
+        const id = request.query.id;
+        if (!id) {
+            sendResponse(
+                response,
+                400,
+                "FAILURE",
+                "The id query param is required",
+                null
+            );
+        }
+        await mouvementRepository.delete(id);
+        sendResponse(
+            response,
+            200,
+            "SUCCESS",
+            "Request executed successfully",
+            null
+        );
+
+    } catch (e) {
+        logger.error(request.correlationId + " ==> Error caught in [deleteMouvementEntreeRC] ==> " + e.stack);
+        sendResponse(
+            response,
+            500,
+            "ERROR",
+            "An error occurred while processing the request deleteMouvementEntreeRC",
+            null
+        );
+    }
+};
+
 exports.deleteMouvementSortieRC = async (request, response) => {
     try {
         const id = Number(request.query.id);

@@ -12,9 +12,15 @@ module.exports = function (app) {
     app.get("/claudex_bars/v1/factures/one", [authController.verifyToken], factureHandler.findAllFactureOneR1);
     app.get("/claudex_bars/v1/factures/detail/all", [authController.verifyToken], factureHandler.findAllDetailFactureR1);
     app.delete("/claudex_bars/v1/factures", [authController.verifyToken], factureHandler.deleteFacture);
+    
+    // A faire
+    app.post("/claudex_bars/v1/stat/producteur/r1", [authController.verifyToken], factureHandler.findAllStatParProducteurR1);
+    app.post("/claudex_bars/v1/stat/producteur/rc", [authController.verifyToken], factureHandler.findAllStatParProducteurRc);
 
-    // Old
-    app.get("/claudex_bars/v1/factures/all/rc", [authController.verifyToken], factureHandler.findAllFactureRC);
-    app.get("/claudex_bars/v1/factures/one/rc", [authController.verifyToken], factureHandler.findAllFactureOneRC);
-    app.get("/claudex_bars/v1/factures/detail/all/rc", [authController.verifyToken], factureHandler.findAllDetailFactureR1);
+    app.post("/claudex_bars/v1/stat/stock/gene/r1", [authController.verifyToken], factureHandler.findAllStatListeStockGeneralVenteR1);
+    app.post("/claudex_bars/v1/stat/stock/gene/rc", [authController.verifyToken], factureHandler.findAllStatListeStockGeneralVenteRC);
+
+    app.post("/claudex_bars/v1/stat/fact/archiv/r1", [authController.verifyToken], factureHandler.findAllStatArchivageR1);
+    app.post("/claudex_bars/v1/stat/fact/archiv/rc", [authController.verifyToken], factureHandler.findAllStatArchivageRC);
+
 }

@@ -24,8 +24,8 @@ exports.addFacture = async (request, response) => {
         }
         const factureObject = {
             code: request.body.code,
-            client: request.body.client,
-            tax: request.body.tax,
+            client_id: Number(request.body.client_id),
+            tax: Number(request.body.tax),
             createdBy: request.authUserId,
         };
         const result = await factureRepository.save(factureObject);
@@ -318,57 +318,57 @@ exports.findCountAllFactureImpaye = async (request, response) => {
     }
 };
 
-exports.findAllFactureRC = async (request, response) => {
-    try {
-        const page = request.query.page;
-        const length = request.query.length;
+// exports.findAllFactureRC = async (request, response) => {
+//     try {
+//         const page = request.query.page;
+//         const length = request.query.length;
 
-        if (page === undefined || page === null || page === '') {
-            return sendResponse(
-                response,
-                400,
-                "FAILURE",
-                "page attribute required",
-                null
-            );
-        }
+//         if (page === undefined || page === null || page === '') {
+//             return sendResponse(
+//                 response,
+//                 400,
+//                 "FAILURE",
+//                 "page attribute required",
+//                 null
+//             );
+//         }
 
-        if (length === undefined || length === null || length === '') {
-            return sendResponse(
-                response,
-                400,
-                "FAILURE",
-                "length attribute required",
-                null
-            );
-        }
+//         if (length === undefined || length === null || length === '') {
+//             return sendResponse(
+//                 response,
+//                 400,
+//                 "FAILURE",
+//                 "length attribute required",
+//                 null
+//             );
+//         }
 
-        const limit = parseInt(length);
-        const offset = (parseInt(page) - 1) * parseInt(length);
-        const facturesRC = await factureRepository.findAllFacturesRC("RC", limit, offset);
-        const allFacturesCount = await factureRepository.countFindAllFactureRC();
+//         const limit = parseInt(length);
+//         const offset = (parseInt(page) - 1) * parseInt(length);
+//         const facturesRC = await factureRepository.findAllFacturesRC("RC", limit, offset);
+//         const allFacturesCount = await factureRepository.countFindAllFactureRC();
 
-        return sendResponse(
-            response,
-            200,
-            "SUCCESS",
-            "Request executed successfully",
-            {
-                factureTotalRCNumber: allFacturesCount.factureTotalRCNumber,
-                facturesRC: facturesRC
-            }
-        );
-    } catch (e) {
-        logger.error(request.correlationId + " ==> Error caught in [findAllFactureRC Factures] ==> " + e.stack);
-        sendResponse(
-            response,
-            500,
-            "ERROR",
-            "An error occurred while processing the request findAllFactureRC Factures",
-            null
-        );
-    }
-};
+//         return sendResponse(
+//             response,
+//             200,
+//             "SUCCESS",
+//             "Request executed successfully",
+//             {
+//                 factureTotalRCNumber: allFacturesCount.factureTotalRCNumber,
+//                 facturesRC: facturesRC
+//             }
+//         );
+//     } catch (e) {
+//         logger.error(request.correlationId + " ==> Error caught in [findAllFactureRC Factures] ==> " + e.stack);
+//         sendResponse(
+//             response,
+//             500,
+//             "ERROR",
+//             "An error occurred while processing the request findAllFactureRC Factures",
+//             null
+//         );
+//     }
+// };
 
 exports.findAllFactureOneR1 = async (request, response) => {
     try {
@@ -404,39 +404,39 @@ exports.findAllFactureOneR1 = async (request, response) => {
     }
 };
 
-exports.findAllFactureOneRC = async (request, response) => {
-    try {
-        const id = request.query.id;
-        if (id === undefined || id === null || id === '') {
-            return sendResponse(
-                response,
-                400,
-                "FAILURE",
-                "id attribute required",
-                null
-            );
-        }
-        const oneFacture = await factureRepository.findById(id);
-        sendResponse(
-            response,
-            200,
-            "SUCCESS",
-            "Request executed successfully",
-            {
-                oneFacture: oneFacture
-            }
-        );
-    } catch (e) {
-        logger.error(request.correlationId + " ==> Error caught in [findAllFactureOneRC Factures-Details] ==> " + e.stack);
-        sendResponse(
-            response,
-            500,
-            "ERROR",
-            "An error occurred while processing the request findAllFactureOneRC Factures-Details",
-            null
-        );
-    }
-};
+// exports.findAllFactureOneRC = async (request, response) => {
+//     try {
+//         const id = request.query.id;
+//         if (id === undefined || id === null || id === '') {
+//             return sendResponse(
+//                 response,
+//                 400,
+//                 "FAILURE",
+//                 "id attribute required",
+//                 null
+//             );
+//         }
+//         const oneFacture = await factureRepository.findById(id);
+//         sendResponse(
+//             response,
+//             200,
+//             "SUCCESS",
+//             "Request executed successfully",
+//             {
+//                 oneFacture: oneFacture
+//             }
+//         );
+//     } catch (e) {
+//         logger.error(request.correlationId + " ==> Error caught in [findAllFactureOneRC Factures-Details] ==> " + e.stack);
+//         sendResponse(
+//             response,
+//             500,
+//             "ERROR",
+//             "An error occurred while processing the request findAllFactureOneRC Factures-Details",
+//             null
+//         );
+//     }
+// };
 
 exports.findAllDetailFactureR1 = async (request, response) => {
     try {
@@ -540,6 +540,182 @@ exports.deleteFacture = async (request, response) => {
             500,
             "ERROR",
             "An error occurred while processing the request deleteFacture",
+            null
+        );
+    }
+};
+
+// stats - r1
+exports.findAllStatParProducteurR1 = async (request, response) => {
+    try {
+        const dateDebutFin = {
+            date_debut: request.body.date_debut,
+            date_fin: request.body.date_fin,
+        };
+
+        const data = await factureRepository.statistitqueParProducteurR1(dateDebutFin);
+        sendResponse(
+            response,
+            200,
+            "SUCCESS",
+            "Request executed successfully",
+            {
+                data: data
+            }
+        );
+    } catch (e) {
+        logger.error(request.correlationId + " ==> Error caught in [findAllStatParProducteurR1 Statistique Producteur] ==> " + e.stack);
+        sendResponse(
+            response,
+            500,
+            "ERROR",
+            "An error occurred while processing the request findAllStatParProducteurR1 Statistique Producteur",
+            null
+        );
+    }
+};
+
+exports.findAllStatListeStockGeneralVenteR1 = async (request, response) => {
+    try {
+        const dateDebutFin = {
+            date_debut: request.body.date_debut,
+            date_fin: request.body.date_fin,
+        };
+
+        const data = await factureRepository.statistitqueListeStockGeneralVenteR1(dateDebutFin);
+        sendResponse(
+            response,
+            200,
+            "SUCCESS",
+            "Request executed successfully",
+            {
+                data: data
+            }
+        );
+    } catch (e) {
+        logger.error(request.correlationId + " ==> Error caught in [findAllStatListeStockGeneralVenteR1 Statistique Liste general stock vente r1] ==> " + e.stack);
+        sendResponse(
+            response,
+            500,
+            "ERROR",
+            "An error occurred while processing the request findAllStatListeStockGeneralVenteR1 Statistique Liste general stock vente r1",
+            null
+        );
+    }
+};
+
+// stats - rc
+exports.findAllStatParProducteurRc = async (request, response) => {
+    try {
+        const dateDebutFin = {
+            date_debut: request.body.date_debut,
+            date_fin: request.body.date_fin,
+        };
+
+        const data = await factureRepository.statistitqueParProducteurRC(dateDebutFin);
+        sendResponse(
+            response,
+            200,
+            "SUCCESS",
+            "Request executed successfully",
+            {
+                data: data
+            }
+        );
+    } catch (e) {
+        logger.error(request.correlationId + " ==> Error caught in [findAllStatParProducteurRc Statistique Producteur] ==> " + e.stack);
+        sendResponse(
+            response,
+            500,
+            "ERROR",
+            "An error occurred while processing the request findAllStatParProducteurRc Statistique Producteur",
+            null
+        );
+    }
+};
+
+exports.findAllStatListeStockGeneralVenteRC = async (request, response) => {
+    try {
+        const dateDebutFin = {
+            date_debut: request.body.date_debut,
+            date_fin: request.body.date_fin,
+        };
+
+        const data = await factureRepository.statistitqueListeStockGeneralVenteRC(dateDebutFin);
+        sendResponse(
+            response,
+            200,
+            "SUCCESS",
+            "Request executed successfully",
+            {
+                data: data
+            }
+        );
+    } catch (e) {
+        logger.error(request.correlationId + " ==> Error caught in [findAllStatListeStockGeneralVenteRC Statistique Liste general stock vente rc] ==> " + e.stack);
+        sendResponse(
+            response,
+            500,
+            "ERROR",
+            "An error occurred while processing the request findAllStatListeStockGeneralVenteRC Statistique Liste general stock vente rc",
+            null
+        );
+    }
+};
+
+exports.findAllStatArchivageR1 = async (request, response) => {
+    try {
+        const dateDebutFin = {
+            date_debut: request.body.date_debut,
+            date_fin: request.body.date_fin,
+        };
+
+        const data = await factureRepository.statistitqueArchivageFactureR1(dateDebutFin);
+        sendResponse(
+            response,
+            200,
+            "SUCCESS",
+            "Request executed successfully",
+            {
+                data: data
+            }
+        );
+    } catch (e) {
+        logger.error(request.correlationId + " ==> Error caught in [findAllStatArchivageR1 Statistique Archivage facture R1] ==> " + e.stack);
+        sendResponse(
+            response,
+            500,
+            "ERROR",
+            "An error occurred while processing the request findAllStatArchivageR1 Statistique Archivage facture R1",
+            null
+        );
+    }
+};
+
+exports.findAllStatArchivageRC = async (request, response) => {
+    try {
+        const dateDebutFin = {
+            date_debut: request.body.date_debut,
+            date_fin: request.body.date_fin,
+        };
+
+        const data = await factureRepository.statistitqueArchivageFactureRC(dateDebutFin);
+        sendResponse(
+            response,
+            200,
+            "SUCCESS",
+            "Request executed successfully",
+            {
+                data: data
+            }
+        );
+    } catch (e) {
+        logger.error(request.correlationId + " ==> Error caught in [findAllStatArchivageRC Statistique Archivage facture RC] ==> " + e.stack);
+        sendResponse(
+            response,
+            500,
+            "ERROR",
+            "An error occurred while processing the request findAllStatArchivageRC Statistique Archivage facture RC",
             null
         );
     }
