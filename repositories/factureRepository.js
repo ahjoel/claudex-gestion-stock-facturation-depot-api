@@ -204,17 +204,32 @@ class FactureRepository {
     async statistitqueParProducteurR1(date) {
         return await db.claudexBarsDB.query(
             `
-            SELECT f.id as id, f.name AS producteur, sum(m.qte) AS quantite, SUM(m.pv) AS montant_vendu, m.types AS statut, m.stock as stock
-            FROM produits p
-            INNER JOIN fournisseurs f ON p.fournisseur_id = f.id
-            INNER JOIN mouvements m ON m.produit_id = p.id
-            WHERE m.types= ?
-            AND m.stock= ?
-            AND m.created_at BETWEEN ? AND ?
-            GROUP BY f.id
-            ORDER BY f.id desc
+            SELECT f.id as id,
+                f.name AS producteur,
+                SUM(m.qte) AS quantite,
+                SUM(m.qte * p.pv) AS montant_vendu,
+                m.types AS statut,
+                m.stock as stock
+            FROM
+                mouvements m
+            JOIN
+                produits p ON m.produit_id = p.id
+            JOIN
+                fournisseurs f ON p.fournisseur_id = f.id
+            WHERE
+                m.created_at BETWEEN ? AND ?
+            AND
+                m.stock= ?
+            AND
+                m.types= ?
+            AND 
+                m.deleted_at IS null
+            GROUP BY
+                f.name
+            ORDER BY
+                f.name
             `,
-            ["OUT", "R1", date.date_debut, date.date_fin]
+            [date.date_debut, date.date_fin, "R1", "OUT" ]
         );
     }
 
@@ -254,17 +269,32 @@ class FactureRepository {
     async statistitqueParProducteurRC(date) {
         return await db.claudexBarsDB.query(
             `
-            SELECT f.id AS id, f.name AS producteur, sum(m.qte) AS quantite, SUM(m.pv) AS montant_vendu, m.types AS statut, m.stock as stock
-            FROM produits p
-            INNER JOIN fournisseurs f ON p.fournisseur_id = f.id
-            INNER JOIN mouvements m ON m.produit_id = p.id
-            WHERE m.types= ?
-            AND m.stock= ?
-            AND m.created_at BETWEEN ? AND ?
-            GROUP BY f.id
-            ORDER BY f.id desc
+            SELECT f.id as id,
+                f.name AS producteur,
+                SUM(m.qte) AS quantite,
+                SUM(m.qte * p.pv) AS montant_vendu,
+                m.types AS statut,
+                m.stock as stock
+            FROM
+                mouvements m
+            JOIN
+                produits p ON m.produit_id = p.id
+            JOIN
+                fournisseurs f ON p.fournisseur_id = f.id
+            WHERE
+                m.created_at BETWEEN ? AND ?
+            AND
+                m.stock= ?
+            AND
+                m.types= ?
+            AND 
+                m.deleted_at IS null
+            GROUP BY
+                f.name
+            ORDER BY
+                f.name;
             `,
-            ["OUT", "RC", date.date_debut, date.date_fin]
+            [date.date_debut, date.date_fin, "RC", "OUT" ]
         );
     }
 
