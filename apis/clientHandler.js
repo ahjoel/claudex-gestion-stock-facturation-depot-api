@@ -25,6 +25,9 @@ exports.addClient = async (request, response) => {
         const clientObject = {
             name: request.body.name,
             description: request.body.description,
+            type: request.body.type,
+            tel: request.body.tel,
+            mail: request.body.mail,
             createdBy: request.authUserId,
         };
         const result = await clientRepository.save(clientObject);

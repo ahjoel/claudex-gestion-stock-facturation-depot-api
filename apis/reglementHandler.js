@@ -45,6 +45,77 @@ function sendResponse(response, status, message, description, data, httpStatus) 
 //     }
 // };
 
+exports.addReglement = async (request, response) => {
+    try {
+        const schema = require("../configs/JSONSchemas/addReglementFacture.json");
+        const valid = jsonValidator.validate(schema, request.body);
+        if (!valid) {
+            return sendResponse(
+                response,
+                400,
+                "FAILURE",
+                jsonValidator.errors[0].message,
+                null
+            );
+        }
+
+        const reglementObject = {
+            mtrecu: Number(request.body.mtrecu),
+            mtpayer: Number(request.body.mtpayer),
+            factureId: Number(request.body.factureId),
+            createdBy: request.authUserId,
+        };
+        const result = await reglementRepository.save(reglementObject);
+        const savedReglement = await reglementRepository.findById(result.insertId);
+        sendResponse(
+            response,
+            200,
+            "SUCCESS",
+            "Request executed successfully",
+            savedReglement
+        );
+    } catch (e) {
+        logger.error(request.correlationId + " ==> Error caught in [addReglement Reglements] ==> " + e.stack);
+        sendResponse(
+            response,
+            500,
+            "ERROR",
+            "An error occurred while processing the request addReglement Reglements",
+            null
+        );
+    }
+};
+
+exports.updateReglement = async (request, response) => {
+    try {
+        const reglementObject = request.body;
+        reglementObject.updatedBy = request.authUserId;
+
+        const result = await reglementRepository.update(reglementObject);
+        if (!result.affectedRows) {
+            sendResponse(response, 404, "FAILURE", "Reglement not found", null);
+        } else {
+            const updatedReglement = await reglementRepository.findById(request.body.id);
+            sendResponse(
+                response,
+                200,
+                "SUCCESS",
+                "Request executed successfully",
+                updatedReglement
+            );
+        }
+    } catch (e) {
+        logger.error(request.correlationId + " ==> Error caught in [updateReglement Reglement] ==> " + e.stack);
+        sendResponse(
+            response,
+            500,
+            "ERROR",
+            "An error occurred while processing the request updateReglement Reglement",
+            null
+        );
+    }
+};
+
 exports.deleteReglement = async (request, response) => {
     try {
         const id = request.query.id;
@@ -57,7 +128,7 @@ exports.deleteReglement = async (request, response) => {
                 null
             );
         }
-        await reglementRepository.delete(id);
+        await reglementRepository.delete(request.authUserId, id);
         sendResponse(
             response,
             200,
@@ -152,6 +223,59 @@ exports.findAll = async (request, response) => {
             500,
             "ERROR",
             "An error occurred while processing the request findAll Reglements",
+            null
+        );
+    }
+};
+
+exports.findAllSituation = async (request, response) => {
+    try {
+        const page = request.query.page;
+        const length = request.query.length;
+
+        if (page === undefined || page === null || page === '') {
+            return sendResponse(
+                response,
+                400,
+                "FAILURE",
+                "page attribute required",
+                null
+            );
+        }
+
+        if (length === undefined || length === null || length === '') {
+            return sendResponse(
+                response,
+                400,
+                "FAILURE",
+                "length attribute required",
+                null
+            );
+        }
+        
+        const limit = parseInt(length);
+        const offset = (parseInt(page) - 1) * parseInt(length);
+
+        const situations = await reglementRepository.findAll_Situation_Reglement(limit, offset);
+        const allSituationCount = await reglementRepository.countFindAllReglement_Situation_Reglement();
+
+        return sendResponse(
+            response,
+            200,
+            "SUCCESS",
+            "Request executed successfully",
+            {
+                allSituationCount: allSituationCount.situationReglementTotalNumber,
+                situations: situations
+            }
+        );
+    } catch (e) {
+        logger.error(request.correlationId + " ==> Error caught in [findAllSituation Reglements] ==> " + e.stack);
+        sendResponse(
+            response,
+            500,
+            "ERROR",
+            "An error occurred while processing the request findAllSituation Reglements",
             null
         );
     }

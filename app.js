@@ -116,7 +116,7 @@ app.get("/test", async(req, res) => {
 
 app.listen(PORT, () =>
   logger.info(
-    `ClaudexBarsApi started successfully. Server is running on port ${PORT}`
+    `ClaudexDepotApi started successfully. Server is running on port ${PORT}`
   )
 );
 

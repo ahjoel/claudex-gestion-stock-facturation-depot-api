@@ -17,10 +17,6 @@
       "type": "string",
       "minLength": 1
     },
-    "zone": {
-      "type": "string",
-      "minLength": 1
-    },
     "password": {
       "type": "string",
       "minLength": 1
@@ -34,7 +30,6 @@
     "email",
     "firstname",
     "lastname",
-    "zone",
     "password",
     "profile"
   ],

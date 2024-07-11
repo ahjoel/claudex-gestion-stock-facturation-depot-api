@@ -14,20 +14,15 @@
       "minLength": 3
     },
     "qte": {
-      "type": "integer",
+      "type": "number",
       "minLength": 1
-    },
-    "stock": {
-      "type": "string",
-      "minLength": 2
     }
   },
   "required": [
     "code",
     "produitId",
     "types",
-    "qte",
-    "stock"
+    "qte"
   ],
   "additionalProperties": false
 }

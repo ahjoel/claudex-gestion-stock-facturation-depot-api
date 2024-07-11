@@ -1,18 +1,23 @@
 {
   "type": "object",
   "properties": {
-    "facture_id": {
+    "factureId": {
       "type": "integer",
       "minLength": 1
     },
-    "total": {
+    "mtpayer": {
+      "type": "integer",
+      "minLength": 1
+    },
+    "mtrecu": {
       "type": "integer",
       "minLength": 1
     }
   },
   "required": [
-    "facture_id",
-    "total"
+    "factureId",
+    "mtpayer",
+    "mtrecu"
   ],
   "additionalProperties": false
 }

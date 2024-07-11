@@ -12,11 +12,16 @@
     "tax": {
       "type": "string",
       "minLength": 1
+    },
+    "remise": {
+      "type": "integer",
+      "minLength": 1
     }
   },
   "required": [
     "code",
     "client_id",
+    "remise",
     "tax"
   ],
   "additionalProperties": false

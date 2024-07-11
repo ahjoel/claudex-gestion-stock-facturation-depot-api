@@ -12,7 +12,6 @@ function sendResponse(response, status, message, description, data, httpStatus) 
 exports.addMouvementEntreeR1 = async (request, response) => {
     try {
         const schema = require("../configs/JSONSchemas/addMouvement.json");
-        console.log("productObject ::", request.body);
         const valid = jsonValidator.validate(schema, request.body);
         if (!valid) {
             return sendResponse(
@@ -28,7 +27,6 @@ exports.addMouvementEntreeR1 = async (request, response) => {
             produitId: request.body.produitId,
             types: "ADD",
             qte: request.body.qte,
-            stock: "R1",
             createdBy: request.authUserId,
         };
         const result = await mouvementRepository.save(entreeR1Object);
@@ -60,10 +58,8 @@ exports.addMouvementSortieR1 = async (request, response) => {
             factureId: request.body.factureId,
             types: "OUT",
             qte: request.body.qte,
-            stock: "R1",
             createdBy: request.authUserId,
         };
-        console.log("pdId :::", sortieR1Object.produitId);
         const mouvementsSortieProduitR1 = await mouvementRepository.findAllVerifierStockR1DispoProduit(sortieR1Object.produitId);
         const stockDispo = Number(mouvementsSortieProduitR1[0].st_dispo)
         const pv = Number(mouvementsSortieProduitR1[0].pv)
@@ -73,7 +69,6 @@ exports.addMouvementSortieR1 = async (request, response) => {
             factureId: request.body.factureId,
             types: "OUT",
             qte: request.body.qte,
-            stock: "R1",
             pv: pv,
             createdBy: request.authUserId,
         };
@@ -126,9 +121,7 @@ exports.updateMouvementEntreeR1 = async (request, response) => {
         if (!result.affectedRows) {
             sendResponse(response, 404, "FAILURE", "EntreeR1 not found", null);
         } else {
-            console.log("ok");
             const updatedEntreeR1 = await mouvementRepository.findById(request.body.id);
-            console.log("ok-1");
             sendResponse(
                 response,
                 200,
@@ -334,42 +327,6 @@ exports.findAllStatCaisseMois = async (request, response) => {
         );
     }
 };
-
-// exports.deleteMouvementEntreeR1 = async (request, response) => {
-//     try {
-//         const id = request.query.id;
-//         if (!id) {
-//             sendResponse(
-//                 response,
-//                 400,
-//                 "FAILURE",
-//                 "The id query param is required",
-//                 null
-//             );
-//         }
-//         const result = await mouvementRepository.delete(request.authUserId, id);
-//         if (!result.affectedRows) {
-//             sendResponse(response, 404, "FAILURE", "MouvementEntreeR1 not found", null);
-//         } else {
-//             sendResponse(
-//                 response,
-//                 200,
-//                 "SUCCESS",
-//                 "Request executed successfully",
-//                 null
-//             );
-//         }
-//     } catch (e) {
-//         logger.error(request.correlationId + " ==> Error caught in [deleteMouvementEntreeR1] ==> " + e.stack);
-//         sendResponse(
-//             response,
-//             500,
-//             "ERROR",
-//             "An error occurred while processing the request",
-//             null
-//         );
-//     }
-// };
 
 exports.deleteMouvementEntreeR1 = async (request, response) => {
     try {

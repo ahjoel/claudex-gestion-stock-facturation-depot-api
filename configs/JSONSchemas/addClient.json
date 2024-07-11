@@ -5,14 +5,25 @@
       "type": "string",
       "minLength": 1
     },
+    "type": {
+      "type": "string",
+      "minLength": 1
+    },
+    "tel": {
+      "type": "string",
+      "minLength": 1
+    },
+    "mail": {
+      "type": "string",
+      "minLength": 1
+    },
     "description": {
       "type": "string",
       "minLength": 1
     }
   },
   "required": [
-    "name",
-    "description"
+    "name"
   ],
   "additionalProperties": false
 }

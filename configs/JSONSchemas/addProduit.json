@@ -24,10 +24,6 @@
     "pv": {
       "type": "integer",
       "minLength": 2
-    },
-    "stock_min": {
-      "type": "integer",
-      "minLength": 1
     }
   },
   "required": [
@@ -35,8 +31,7 @@
     "name",
     "fournisseurId",
     "modelId",
-    "pv",
-    "stock_min"
+    "pv"
   ],
-  "additionalProperties": false
+  "additionalProperties": true
 }

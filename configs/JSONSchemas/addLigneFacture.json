@@ -13,10 +13,6 @@
       "type": "integer",
       "minLength": 1
     },
-    "stock": {
-      "type": "string",
-      "minLength": 1
-    },
     "quantity": {
       "type": "integer",
       "minLength": 1
@@ -26,7 +22,6 @@
     "productId",
     "facture_id",
     "pv",
-    "stock",
     "quantity"
   ],
   "additionalProperties": false

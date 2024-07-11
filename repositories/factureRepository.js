@@ -4,21 +4,21 @@ class FactureRepository {
 
     async save(facture) {
         return await db.claudexBarsDB.query(
-            "INSERT INTO factures(code, client_id, tax, created_by, created_at) VALUES(?, ?, ?, ?, now())",
-            [facture.code, facture.client_id, facture.tax, facture.createdBy]
+            "INSERT INTO factures(code, client_id, tax, remise, created_by, created_at) VALUES(?, ?, ?, ?, ?, now())",
+            [facture.code, facture.client_id, facture.tax, facture.remise, facture.createdBy]
         );
     }
 
     async saveLigneFacture(facture) {
         return await db.claudexBarsDB.query(
-            "INSERT INTO mouvements(facture_id, produit_id, qte, pv, stock, types, created_by, created_at) VALUES(?, ?, ?, ?, ?, ?, ?, now())",
-            [facture.facture_id, facture.productId, facture.qte, facture.pv, facture.stock, facture.types, facture.createdBy]
+            "INSERT INTO mouvements(facture_id, produit_id, qte, pv, types, created_by, created_at) VALUES(?, ?, ?, ?, ?, ?, now())",
+            [facture.facture_id, facture.productId, facture.qte, facture.pv, facture.types, facture.createdBy]
         );
     }
 
     async findById(id) {
         return (await db.claudexBarsDB.query(
-            "SELECT id, code, client_id, tax, created_at AS createdAt, created_by AS createdBy, updated_at As updatedAt, updated_by AS updatedBy FROM factures WHERE id = ?",
+            "SELECT id, code, client_id, tax, remise, created_at AS createdAt, created_by AS createdBy, updated_at As updatedAt, updated_by AS updatedBy FROM factures WHERE id = ?",
             [id]
         ))[0];
     }
@@ -44,11 +44,12 @@ class FactureRepository {
             "    code = CASE WHEN ? IS NOT NULL THEN ? ELSE code END," +
             "    client_id = CASE WHEN ? IS NOT NULL THEN ? ELSE client_id END," +
             "    tax = CASE WHEN ? IS NOT NULL THEN ? ELSE tax END," +
+            "    remise = CASE WHEN ? IS NOT NULL THEN ? ELSE remise END," +
             "    updated_at = now()," +
             "    updated_by = ? " +
             "WHERE" +
             "    id = ?",
-            [facture.code, facture.code, facture.client_id, facture.client_id, facture.tax, facture.tax, facture.updatedBy, facture.id]
+            [facture.code, facture.code, facture.client_id, facture.client_id, facture.tax, facture.tax, facture.remise, facture.remise, facture.updatedBy, facture.id]
         );
     }
 
@@ -61,17 +62,116 @@ class FactureRepository {
     async findAllFacturesR1(limit, offset) {
         return await db.claudexBarsDB.query(
             `
-            SELECT f2.id as id, f2.code as code, c1.name as client,f2.client_id as client_id, f2.created_at AS createdAt, f2.tax as taxe, m.stock as stock, cast(count(m.produit_id) as varchar(50)) as nbproduit, sum(m.pv * m.qte) AS totalfacture,
-            CASE WHEN r.facture_id IS NOT NULL AND r.deleted_at IS NULL and r.deleted_by IS NULL THEN 'payée' ELSE 'impayée' END AS statut
+            SELECT f2.id as id, f2.code as code, c1.name as client,f2.client_id as client_id, f2.remise as remise, f2.created_at AS createdAt, f2.tax as taxe, cast(count(m.produit_id) as varchar(50)) as nbproduit, sum(m.pv * m.qte) AS totalfacture
             FROM mouvements m
-            inner join factures f2 on m.facture_id = f2.id 
+            INNER join factures f2 on m.facture_id = f2.id 
             INNER JOIN produits p2 on m.produit_id = p2.id
             INNER JOIN clients c1 ON f2.client_id = c1.id
-            LEFT JOIN  reglements r ON f2.id = r.facture_id
             AND m.deleted_at IS NULL
             GROUP BY f2.id 
-            order by f2.id desc
+            ORDER by f2.id desc
             LIMIT ? OFFSET ?`,[limit, offset]
+        );
+    }
+
+    async findAllFacturesImp() {
+        return await db.claudexBarsDB.query(
+            `
+            SELECT 
+                f.id AS id,
+                f.code AS code,
+                f.created_at as createdAt,
+                c.name as client,
+                (m.Mt_a_payerr - f.remise) AS mt_a_payer,
+                COALESCE(r.mt_encaisse, 0) AS mt_encaisse,
+                (m.Mt_a_payerr - f.remise - COALESCE(r.mt_encaisse, 0)) AS mt_restant,
+                u.username as auteur
+            FROM 
+                claudex_depot.factures f
+            LEFT JOIN 
+                (SELECT 
+                    facture_id, 
+                    SUM(pv * qte) AS Mt_a_payerr
+                FROM 
+                    claudex_depot.mouvements 
+                WHERE 
+                    deleted_by IS NULL 
+                GROUP BY 
+                    facture_id
+                ) m ON f.id = m.facture_id
+            LEFT JOIN 
+                (SELECT 
+                    facture_id, 
+                    SUM(mtpayer) AS mt_encaisse 
+                FROM 
+                    claudex_depot.reglements 
+                WHERE 
+                    deleted_by IS NULL 
+                GROUP BY 
+                    facture_id
+                ) r ON f.id = r.facture_id
+            LEFT JOIN 
+                claudex_depot.clients c ON c.id = f.client_id
+            LEFT JOIN 
+                claudex_depot.users u ON u.id = f.created_by 
+            WHERE 
+                c.deleted_by IS NULL
+            GROUP BY 
+                f.id, f.code, f.created_at, c.name, m.Mt_a_payerr, r.mt_encaisse, u.username
+            HAVING 
+                mt_a_payer > 0
+            ORDER BY 
+                f.id DESC
+
+
+            `
+        );
+    }
+
+    async findAllFactureDetailsClient(id) {
+        return await db.claudexBarsDB.query(
+            `
+            SELECT 
+                f.id AS id,
+                f.code AS codeFacture,
+                f.created_at as createdAt,
+                c.name as client,
+                (m.Mt_a_payerr - f.remise) AS mt_a_payer,
+                COALESCE(r.mt_encaisse, 0) AS mt_encaisse,
+                (m.mt_a_payerr - f.remise - COALESCE(r.mt_encaisse, 0)) AS mt_restant,
+                u.username as auteur
+            FROM 
+                claudex_depot.factures f
+            LEFT JOIN 
+                (SELECT 
+                    facture_id, 
+                    SUM(pv * qte) AS mt_a_payerr 
+                FROM 
+                    claudex_depot.mouvements 
+                WHERE 
+                    deleted_by IS NULL 
+                GROUP BY 
+                    facture_id
+                ) m ON f.id = m.facture_id
+            LEFT JOIN 
+                (SELECT 
+                    facture_id, 
+                    SUM(mtpayer) AS mt_encaisse 
+                FROM 
+                    claudex_depot.reglements 
+                WHERE 
+                    deleted_by IS NULL 
+                GROUP BY 
+                    facture_id
+                ) r ON f.id = r.facture_id
+            LEFT JOIN 
+                claudex_depot.clients c ON c.id = f.client_id
+            LEFT JOIN 
+                claudex_depot.users u ON u.id = f.created_by 
+            WHERE 
+                f.id = ?
+
+            `,[id]
         );
     }
 
@@ -130,17 +230,14 @@ class FactureRepository {
         return (await db.claudexBarsDB.query(`
         SELECT CAST(count(sous_requete.id) AS VARCHAR(255)) AS factureTotalR1Number 
         FROM (
-            SELECT f2.id as id, f2.code as code, c1.name as client, f2.created_at AS createdAt, f2.tax as taxe, count(m.produit_id) as NbProduit, sum(m.pv * m.qte) AS totalFacture,
-            CASE WHEN r.facture_id IS NOT NULL THEN 'payée' ELSE 'impayée' END AS statut
+            SELECT f2.id as id, f2.code as code, c1.name as client, f2.created_at AS createdAt, f2.tax as taxe, count(m.produit_id) as NbProduit, sum(m.pv * m.qte) AS totalFacture
             FROM mouvements m
-            inner join factures f2 on m.facture_id = f2.id 
+            INNER join factures f2 on m.facture_id = f2.id 
             INNER JOIN produits p2 on m.produit_id = p2.id
             INNER JOIN clients c1 ON f2.client_id = c1.id
-            LEFT JOIN 
-                reglements r ON f2.id = r.facture_id
             AND m.deleted_at IS NULL
             GROUP BY f2.id 
-            order by f2.id desc
+            ORDER by f2.id desc
         ) as sous_requete
         `))[0];
     }
@@ -154,7 +251,6 @@ class FactureRepository {
             FROM mouvements m
             INNER JOIN factures f2 ON m.facture_id = f2.id 
             INNER JOIN produits p2 ON m.produit_id = p2.id
-            LEFT JOIN reglements r ON f2.id = r.facture_id
             WHERE m.deleted_at IS NULL
             GROUP BY f2.id 
             HAVING statut = 'impayée'

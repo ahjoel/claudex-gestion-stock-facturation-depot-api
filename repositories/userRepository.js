@@ -7,7 +7,6 @@ class UserRepository {
                                                         u.firstname,
                                                         u.lastname,
                                                         u.email,
-                                                        u.zone,
                                                         u.profile
                                                  FROM users u
                                                  WHERE u.username = ?
@@ -20,7 +19,6 @@ class UserRepository {
                                                         u.firstname,
                                                         u.lastname,
                                                         u.email,
-                                                        u.zone,
                                                         u.profile
                                                  FROM users u
                                                  WHERE u.username = ?
@@ -39,9 +37,9 @@ class UserRepository {
 
     async save(user) {
         return await db.claudexBarsDB.query(
-            `INSERT INTO users(username, email, firstname, lastname, zone, password, created_at, created_by, profile)
-             VALUES (?, ?, ?, ?, ?, ?,now(), ?, ?)`,
-            [user.username, user.email, user.firstname, user.lastname, user.zone, user.password, user.createdBy, user.profile]
+            `INSERT INTO users(username, email, firstname, lastname, password, created_at, created_by, profile)
+             VALUES (?, ?, ?, ?, ?,now(), ?, ?)`,
+            [user.username, user.email, user.firstname, user.lastname, user.password, user.createdBy, user.profile]
         );
     }
 
@@ -74,7 +72,6 @@ class UserRepository {
                  email      = CASE WHEN ? IS NOT NULL THEN ? ELSE email END,
                  firstname  = CASE WHEN ? IS NOT NULL THEN ? ELSE firstname END,
                  lastname   = CASE WHEN ? IS NOT NULL THEN ? ELSE lastname END,
-                 zone    = CASE WHEN ? IS NOT NULL THEN ? ELSE zone END,
                  profile = CASE WHEN ? IS NOT NULL THEN ? ELSE profile END,
                  updated_at = now(),
                  updated_by = ?
@@ -85,7 +82,6 @@ class UserRepository {
                 user.email, user.email,
                 user.firstname, user.firstname,
                 user.lastname, user.lastname,
-                user.zone, user.zone,
                 user.profile, user.profile,
                 user.updatedBy,
                 user.id
@@ -106,7 +102,6 @@ class UserRepository {
                     u.email,
                     u.firstname,
                     u.lastname,
-                    u.zone,
                     u.created_at      AS createdAt,
                     u.created_by      AS createdBy,
                     u.updated_at      As updatedAt,

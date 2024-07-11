@@ -22,10 +22,19 @@ exports.addFacture = async (request, response) => {
                 null
             );
         }
+        const client_id = request.body.client_id.split('-')[0];
+        const client_code = request.body.client_id.split('-')[1];
+
+        let code_clt = request.body.code
+        const parts = code_clt.split("/");
+        parts.splice(1, 0, client_code);
+        code_clt = parts.join("/");
+
         const factureObject = {
-            code: request.body.code,
-            client_id: Number(request.body.client_id),
+            code: code_clt,
+            client_id: Number(client_id),
             tax: Number(request.body.tax),
+            remise: request.body.remise,
             createdBy: request.authUserId,
         };
         const result = await factureRepository.save(factureObject);
@@ -105,7 +114,6 @@ exports.addLigneFacture = async (request, response) => {
             productId: request.body.productId,
             facture_id: request.body.facture_id,
             pv: request.body.pv,
-            stock: request.body.stock,
             qte: request.body.quantity,
             types: "OUT",
             createdBy: request.authUserId,
@@ -267,6 +275,7 @@ exports.findAllFactureR1 = async (request, response) => {
 
         const limit = parseInt(length);
         const offset = (parseInt(page) - 1) * parseInt(length);
+
         const facturesR1 = await factureRepository.findAllFacturesR1(limit, offset);
         const allFacturesCount = await factureRepository.countFindAllFactureR1();
 
@@ -287,6 +296,58 @@ exports.findAllFactureR1 = async (request, response) => {
             500,
             "ERROR",
             "An error occurred while processing the request findAllFactureR1 Factures",
+            null
+        );
+    }
+};
+
+exports.findAllFactureImpayee = async (request, response) => {
+    try {
+    
+        const facturesImp = await factureRepository.findAllFacturesImp();
+        
+        return sendResponse(
+            response,
+            200,
+            "SUCCESS",
+            "Request executed successfully",
+            {
+                facturesImp: facturesImp
+            }
+        );
+    } catch (e) {
+        logger.error(request.correlationId + " ==> Error caught in [findAllFactureImpayee Factures] ==> " + e.stack);
+        sendResponse(
+            response,
+            500,
+            "ERROR",
+            "An error occurred while processing the request findAllFactureImpayee Factures",
+            null
+        );
+    }
+};
+
+exports.findAllFactureDetailById = async (request, response) => {
+    try {
+    
+        const factureInfo = await factureRepository.findAllFactureDetailsClient(request.query.id);
+        
+        return sendResponse(
+            response,
+            200,
+            "SUCCESS",
+            "Request executed successfully",
+            {
+                factureInfo: factureInfo
+            }
+        );
+    } catch (e) {
+        logger.error(request.correlationId + " ==> Error caught in [findAllFactureDetailById Factures] ==> " + e.stack);
+        sendResponse(
+            response,
+            500,
+            "ERROR",
+            "An error occurred while processing the request findAllFactureDetailById Factures",
             null
         );
     }
