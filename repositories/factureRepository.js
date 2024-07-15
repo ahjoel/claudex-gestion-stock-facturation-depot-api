@@ -196,13 +196,14 @@ class FactureRepository {
     async findAllDetailFacturesR1(code) {
         return await db.claudexBarsDB.query(
             `
-            SELECT m.id, f2.code, m.facture_id as factureId, c1.name as client, f2.created_at, f2.tax, p2.name as produit, p2.id as produitId, m2.name as modele, f.name as fournisseur, m.qte, m.pv 
+            SELECT m.id, f2.code, m.facture_id as factureId, c1.name as client, u.username, f2.created_at, f2.tax, f2.remise, p2.name as produit, p2.id as produitId, m2.name as modele, f.name as fournisseur, m.qte, m.pv 
             FROM mouvements m
             inner join factures f2 on m.facture_id = f2.id 
             INNER JOIN produits p2 on m.produit_id = p2.id
             INNER JOIN fournisseurs f on p2.fournisseur_id = f.id
             INNER JOIN models m2 on p2.model_id = m2.id
             INNER JOIN clients c1 ON f2.client_id = c1.id
+            INNER JOIN users u ON f2.created_by = u.id
             AND m.deleted_at IS NULL
             where f2.code= ?
             `,[code]
