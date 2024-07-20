@@ -536,6 +536,30 @@ exports.findAllDetailFactureR1 = async (request, response) => {
     }
 };
 
+exports.findFactureImpayeeClient = async (request, response) => {
+    try {
+        const factureImp = await factureRepository.findAll_Facture_Impayee_Client(request.query.name);
+        sendResponse(
+            response,
+            200,
+            "SUCCESS",
+            "Request executed successfully",
+            {
+                factImp: factureImp
+            }
+        );
+    } catch (e) {
+        logger.error(request.correlationId + " ==> Error caught in [findFactureImpayeeClient Facture not found] ==> " + e.stack);
+        sendResponse(
+            response,
+            500,
+            "ERROR",
+            "An error occurred while processing the request findFactureImpayeeClient Facture not found",
+            null
+        );
+    }
+};
+
 exports.findAllDetailFactureRC = async (request, response) => {
     try {
         const code = request.query.code;
@@ -665,6 +689,171 @@ exports.findAllStatListeStockGeneralVenteR1 = async (request, response) => {
     }
 };
 
+exports.findAllStatListeFacturesRegleNonRegle = async (request, response) => {
+    try {
+        const dateDebutFin = {
+            date_debut: request.body.date_debut,
+            date_fin: request.body.date_fin,
+        };
+
+        const data = await factureRepository.statistitqueListeFacturesRegleNonRegle(dateDebutFin);
+        sendResponse(
+            response,
+            200,
+            "SUCCESS",
+            "Request executed successfully",
+            {
+                data: data
+            }
+        );
+    } catch (e) {
+        logger.error(request.correlationId + " ==> Error caught in [findAllStatListeFacturesRegleNonRegle Statistique Liste general factures] ==> " + e.stack);
+        sendResponse(
+            response,
+            500,
+            "ERROR",
+            "An error occurred while processing the request findAllStatListeFacturesRegleNonRegle Statistique Liste general factures",
+            null
+        );
+    }
+};
+
+exports.findAllStatListeFacturesReglement = async (request, response) => {
+    try {
+        const dateDebutFin = {
+            date_debut: request.body.date_debut,
+            date_fin: request.body.date_fin,
+        };
+
+        const data = await factureRepository.statistitqueListeFacturesReglement(dateDebutFin);
+        sendResponse(
+            response,
+            200,
+            "SUCCESS",
+            "Request executed successfully",
+            {
+                data: data
+            }
+        );
+    } catch (e) {
+        logger.error(request.correlationId + " ==> Error caught in [findAllStatListeFacturesReglement Statistique Liste general factures] ==> " + e.stack);
+        sendResponse(
+            response,
+            500,
+            "ERROR",
+            "An error occurred while processing the request findAllStatListeFacturesReglement Statistique Liste general factures",
+            null
+        );
+    }
+};
+
+exports.findAllStatListeFacturesArchivees = async (request, response) => {
+    try {
+        const dateDebutFin = {
+            date_debut: request.body.date_debut,
+            date_fin: request.body.date_fin,
+        };
+
+        const data = await factureRepository.statistitqueListeFacturesArchivees(dateDebutFin);
+        sendResponse(
+            response,
+            200,
+            "SUCCESS",
+            "Request executed successfully",
+            {
+                data: data
+            }
+        );
+    } catch (e) {
+        logger.error(request.correlationId + " ==> Error caught in [findAllStatListeFacturesArchivees Statistique Liste general factures archivees] ==> " + e.stack);
+        sendResponse(
+            response,
+            500,
+            "ERROR",
+            "An error occurred while processing the request findAllStatListeFacturesArchivees Statistique Liste general factures archivees",
+            null
+        );
+    }
+};
+
+exports.findAllStatListeFacturesPenalite = async (request, response) => {
+    try {
+        const data = await factureRepository.statistitqueListeFacturesRestePenalite();
+        sendResponse(
+            response,
+            200,
+            "SUCCESS",
+            "Request executed successfully",
+            {
+                data: data
+            }
+        );
+    } catch (e) {
+        logger.error(request.correlationId + " ==> Error caught in [findAllStatListeFacturesPenalite Statistique Liste general factures] ==> " + e.stack);
+        sendResponse(
+            response,
+            500,
+            "ERROR",
+            "An error occurred while processing the request findAllStatListeFacturesPenalite Statistique Liste general factures",
+            null
+        );
+    }
+};
+
+exports.findAllStatListeStockGeneralVente = async (request, response) => {
+    try {
+        const dateDebutFin = {
+            date_debut: request.body.date_debut,
+            date_fin: request.body.date_fin,
+        };
+
+        const data = await factureRepository.statistitqueListeStockGeneralVente(dateDebutFin);
+        sendResponse(
+            response,
+            200,
+            "SUCCESS",
+            "Request executed successfully",
+            {
+                data: data
+            }
+        );
+    } catch (e) {
+        logger.error(request.correlationId + " ==> Error caught in [findAllStatListeStockGeneralVente Statistique Liste general stock vente] ==> " + e.stack);
+        sendResponse(
+            response,
+            500,
+            "ERROR",
+            "An error occurred while processing the request findAllStatListeStockGeneralVente Statistique Liste general stock vente",
+            null
+        );
+    }
+};
+
+exports.findCountFacturesJour = async (request, response) => {
+    try {
+        const factureDuJourCount = await factureRepository.statistitqueNbFacturesJours();
+  
+        return sendResponse(
+            response,
+            200,
+            "SUCCESS",
+            "Request executed successfully",
+            {
+                factureNb: factureDuJourCount?.nbFactJour
+            }
+        );
+    } catch (e) {
+        logger.error(request.correlationId + " ==> Error caught in [findCountFacturesJour Factures] ==> " + e.stack);
+        sendResponse(
+            response,
+            500,
+            "ERROR",
+            "An error occurred while processing the request",
+            null
+        );
+    }
+};
+
 // stats - rc
 exports.findAllStatParProducteurRc = async (request, response) => {
     try {
@@ -694,6 +883,7 @@ exports.findAllStatParProducteurRc = async (request, response) => {
         );
     }
 };
+
 
 exports.findAllStatListeStockGeneralVenteRC = async (request, response) => {
     try {

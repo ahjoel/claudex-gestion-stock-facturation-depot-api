@@ -4,6 +4,7 @@ const authController = require("../controllers/authController");
 module.exports = function (app) {
     app.get("/claudex_depot/v1/reglements/all", [authController.verifyToken], reglementHandler.findAll);
     app.get("/claudex_depot/v1/reglements/situation", [authController.verifyToken], reglementHandler.findAllSituation);
+    app.get("/claudex_depot/v1/reglements/situation/mois", [authController.verifyToken], reglementHandler.findAllReglementPerMonth);
     app.post("/claudex_depot/v1/reglements", [authController.verifyToken], reglementHandler.addReglement);
     app.put("/claudex_depot/v1/reglements", [authController.verifyToken], reglementHandler.updateReglement);
     app.get("/claudex_depot/v1/reglements/month/count", [authController.verifyToken], reglementHandler.findAllReglementMonth);

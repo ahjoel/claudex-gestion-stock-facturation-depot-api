@@ -300,6 +300,66 @@ exports.findAllMouvementEntreeR1Dispo = async (request, response) => {
     }
 };
 
+exports.findAllMouvementEntreeR1DispoByProduit = async (request, response) => {
+    try {
+        const page = request.query.page;
+        const length = request.query.length;
+        const produitId = request.query.produitId;
+
+        const entreeR1ObjectProd = {
+            page: request.body.page,
+            length: request.body.length,
+            produitId: request.body.produitId
+        };
+
+        if (entreeR1ObjectProd.page === undefined || entreeR1ObjectProd.page === null || entreeR1ObjectProd.page === '') {
+            return sendResponse(
+                response,
+                400,
+                "FAILURE",
+                "page attribute required",
+                null
+            );
+        }
+
+        if (entreeR1ObjectProd.length === undefined || entreeR1ObjectProd.length === null || entreeR1ObjectProd.length === '') {
+            return sendResponse(
+                response,
+                400,
+                "FAILURE",
+                "length attribute required",
+                null
+            );
+        }
+
+        const limit = parseInt(entreeR1ObjectProd.length);
+        const offset = (parseInt(entreeR1ObjectProd.page) - 1) * parseInt(entreeR1ObjectProd.length);
+
+        const mouvementsEntreeR1DispoProduit = await mouvementRepository.findAllEntreeR1DispoByProduit(entreeR1ObjectProd.produitId, limit, offset);
+        const allMouvementsEntreeR1DispoCountProduit = await mouvementRepository.countFindAllEntreeR1DispoByProduit(entreeR1ObjectProd.produitId);
+
+        return sendResponse(
+            response,
+            200,
+            "SUCCESS",
+            "Request executed successfully",
+            {
+                mouvementsEntreeR1DispoNumber: allMouvementsEntreeR1DispoCountProduit.entreeR1DispoNumber,
+                mouvementsEntreeR1Dispo: mouvementsEntreeR1DispoProduit
+            }
+        );
+    } catch (e) {
+        logger.error(request.correlationId + " ==> Error caught in [findAllMouvementEntreeR1DispoByProduit entreeR1NumberDispo] ==> " + e.stack);
+        sendResponse(
+            response,
+            500,
+            "ERROR",
+            "An error occurred while processing the request",
+            null
+        );
+    }
+};
+
 exports.findAllStatCaisseMois = async (request, response) => {
     try {
     

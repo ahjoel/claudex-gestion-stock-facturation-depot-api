@@ -73,6 +73,7 @@ class UserRepository {
                  firstname  = CASE WHEN ? IS NOT NULL THEN ? ELSE firstname END,
                  lastname   = CASE WHEN ? IS NOT NULL THEN ? ELSE lastname END,
                  profile = CASE WHEN ? IS NOT NULL THEN ? ELSE profile END,
+                 password = CASE WHEN ? IS NOT NULL THEN ? ELSE password END,
                  updated_at = now(),
                  updated_by = ?
              WHERE id = ?
@@ -83,6 +84,7 @@ class UserRepository {
                 user.firstname, user.firstname,
                 user.lastname, user.lastname,
                 user.profile, user.profile,
+                user.password, user.password,
                 user.updatedBy,
                 user.id
             ]

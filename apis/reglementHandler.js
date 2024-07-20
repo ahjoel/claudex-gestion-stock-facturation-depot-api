@@ -2,6 +2,7 @@ const {logger} = require("../utils/logger");
 const reglementRepository = require("../repositories/reglementRepository");
 const genericJsonResponse = require("../models/genericResponseModel");
 const JsonValidator = require("ajv");
+const factureRepository = require("../repositories/factureRepository");
 const jsonValidator = new JsonValidator();
 
 function sendResponse(response, status, message, description, data, httpStatus) {
@@ -175,6 +176,30 @@ exports.findReglement = async (request, response) => {
     }
 };
 
+// exports.findFactureImpayeeClient = async (request, response) => {
+//     try {
+//         const factureImp = await factureRepository.findAll_Facture_Impayee_Client(request.query.name);
+//         sendResponse(
+//             response,
+//             200,
+//             "SUCCESS",
+//             "Request executed successfully",
+//             {
+//                 factImp: factureImp
+//             }
+//         );
+//     } catch (e) {
+//         logger.error(request.correlationId + " ==> Error caught in [findFactureImpayeeClient Facture not found] ==> " + e.stack);
+//         sendResponse(
+//             response,
+//             500,
+//             "ERROR",
+//             "An error occurred while processing the request findFactureImpayeeClient Facture not found",
+//             null
+//         );
+//     }
+// };
+
 exports.findAll = async (request, response) => {
     try {
         const page = request.query.page;
@@ -276,6 +301,31 @@ exports.findAllSituation = async (request, response) => {
             500,
             "ERROR",
             "An error occurred while processing the request findAllSituation Reglements",
+            null
+        );
+    }
+};
+
+exports.findAllReglementPerMonth = async (request, response) => {
+    try {
+        const data = await reglementRepository.findAll_Reglement_Month();
+
+        return sendResponse(
+            response,
+            200,
+            "SUCCESS",
+            "Request executed successfully",
+            {
+                data: data
+            }
+        );
+    } catch (e) {
+        logger.error(request.correlationId + " ==> Error caught in [findAllReglementPerMonth Reglements] ==> " + e.stack);
+        sendResponse(
+            response,
+            500,
+            "ERROR",
+            "An error occurred while processing the request findAllReglementPerMonth Reglements",
             null
         );
     }

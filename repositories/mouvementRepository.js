@@ -159,6 +159,40 @@ class MouvementRepository {
       [limit, offset]
     );
   }
+  async findAllEntreeR1DispoByProduit(produitId, limit, offset) {
+    return await db.claudexBarsDB.query(
+      `
+            SELECT p.id as id, p.name as produit, m2.name as model, f.name as fournisseur,
+              sum(case 
+                      when m.created_at  < '2024-05-19'
+                      then case m.types when 'OUT' then -1 else 1 end
+                      else 0 
+                  end * qte) AS st_init,
+              sum(case
+                      when m.created_at BETWEEN '2024-05-19' AND now()
+                      AND m.types = 'ADD' then qte 
+                      else 0 
+              end) AS qt_e,
+              sum(case 
+                      when m.created_at BETWEEN '2024-05-19' AND now()
+                      AND m.types = 'OUT' then qte 
+                      else 0 
+                  end) AS qt_s, 
+              sum(case m.types when 'OUT' then -1 else 1 end * qte) AS st_dispo, p.seuil as seuil, p.pv as pv
+            FROM mouvements m
+            inner join produits p on m.produit_id = p.id 
+            INNER JOIN models m2 on p.model_id = m2.id
+            INNER JOIN fournisseurs f on p.fournisseur_id = f.id
+            AND m.deleted_at IS NULL
+            AND m.created_at <= now()
+            AND p.id = ?
+            GROUP BY p.id 
+            order by p.name 
+            LIMIT ? OFFSET ?
+          `,
+      [produitId, limit, offset]
+    );
+  }
 
   async findAllVerifierStockR1DispoProduit(produitId) {
     return await db.claudexBarsDB.query(
@@ -186,7 +220,7 @@ class MouvementRepository {
             INNER JOIN fournisseurs f on p.fournisseur_id = f.id
             AND m.deleted_at IS NULL
             AND m.created_at <= now()
-            WHERE p.id= ?
+            AND p.id= ?
           `,
       [produitId]
     );
@@ -294,6 +328,42 @@ class MouvementRepository {
         order by p.name)
         as sous_requete
         `)
+    )[0];
+  }
+
+  async countFindAllEntreeR1DispoByProduit(produitId) {
+    return (
+      await db.claudexBarsDB.query(`
+        SELECT CAST(count(sous_requete.produitId) AS VARCHAR(255)) AS entreeR1DispoNumber 
+        FROM
+        (SELECT p.id as produitId, p.name as produit, m2.name as model, f.name as fournisseur,
+          sum(case 
+                  when m.created_at  < '2024-07-06'
+                  then case m.types when 'OUT' then -1 else 1 end
+                  else 0 
+              end * qte) AS st_init,
+          sum(case
+                  when m.created_at BETWEEN '2024-07-06' AND now() 
+                  AND m.types = 'ADD' then qte 
+                  else 0 
+          end) AS qt_e,
+          sum(case 
+                  when m.created_at BETWEEN '2024-07-06' AND now() 
+                  AND m.types = 'OUT' then qte 
+                  else 0 
+              end) AS qt_s, 
+          sum(case m.types when 'OUT' then -1 else 1 end * qte) AS st_dispo, p.seuil as seuil
+        FROM mouvements m
+        inner join produits p on m.produit_id = p.id 
+        INNER JOIN models m2 on p.model_id = m2.id
+        INNER JOIN fournisseurs f on p.fournisseur_id = f.id
+        AND m.deleted_at IS NULL
+        AND m.created_at <= now()
+        AND p.id = ?
+        GROUP BY p.id
+        order by p.name)
+        as sous_requete
+        `, [produitId])
     )[0];
   }
 

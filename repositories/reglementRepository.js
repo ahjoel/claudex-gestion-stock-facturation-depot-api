@@ -132,6 +132,25 @@ class ReglementRepository {
     );
   }
 
+  async findAll_Reglement_Month() {
+    return await db.claudexBarsDB.query(
+      `
+        SELECT
+            CAST(ROW_NUMBER() OVER (ORDER BY created_at) AS VARCHAR(255)) AS id,
+            CONCAT(MONTHNAME(created_at), ' ', YEAR(created_at)) AS moisAnnee,
+            SUM(mtpayer) AS Mtotal
+        FROM
+            reglements
+        WHERE
+            deleted_at IS NULL
+        GROUP BY
+            YEAR(created_at), MONTH(created_at)
+        ORDER BY
+            YEAR(created_at) DESC, MONTH(created_at) DESC
+      `
+    );
+  }
+
   async countFindAllReglement_Situation_Reglement() {
     return (
       await db.claudexBarsDB.query(`
@@ -218,7 +237,7 @@ class ReglementRepository {
   async countFindAllReglementMonth() {
     return (
       await db.claudexBarsDB.query(`
-        SELECT CAST(SUM(totalFacture)AS VARCHAR(255)) AS reglementMonthTotalNumber 
+        SELECT CAST(SUM(mtpayer) AS VARCHAR(255)) AS reglementMonthTotalNumber 
         FROM reglements
         WHERE YEAR(reglements.created_at) = YEAR(CURDATE())
         AND MONTH(reglements.created_at) = MONTH(CURDATE());
@@ -229,7 +248,7 @@ class ReglementRepository {
   async countFindAllReglementDay() {
     return (
       await db.claudexBarsDB.query(`
-        SELECT CAST(SUM(totalFacture)AS VARCHAR(255)) AS reglementDayTotalNumber 
+        SELECT CAST(SUM(mtpayer) AS VARCHAR(255)) AS reglementDayTotalNumber 
         FROM reglements
         WHERE YEAR(reglements.created_at) = YEAR(CURDATE())
         AND day (reglements.created_at) = day(CURDATE());

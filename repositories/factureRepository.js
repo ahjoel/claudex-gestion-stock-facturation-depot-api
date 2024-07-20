@@ -210,22 +210,58 @@ class FactureRepository {
         );
     }
 
-    // async findAllDetailFacturesRC(stock, code) {
-    //     return await db.claudexBarsDB.query(
-    //         `
-    //         // INUTILISE
-    //         SELECT m.id, f2.code, m.facture_id as factureId, f2.client, f2.created_at, f2.tax, p2.name as produit, p2.id as produitId, m2.name as modele, f.name as fournisseur, m.qte, m.pv 
-    //         FROM mouvements m
-    //         inner join factures f2 on m.facture_id = f2.id 
-    //         INNER JOIN produits p2 on m.produit_id = p2.id
-    //         INNER JOIN fournisseurs f on p2.fournisseur_id = f.id
-    //         INNER JOIN models m2 on p2.model_id = m2.id
-    //         AND m.deleted_at IS NULL
-    //         AND m.stock= ?
-    //         where f2.code= ?
-    //         `,[stock, code]
-    //     );
-    // }
+    async findAll_Facture_Impayee_Client(name) {
+        return await db.claudexBarsDB.query(
+          `
+           SELECT CAST(SUM(sous_requete.mt_restant) AS VARCHAR(255)) AS impayee 
+            FROM (
+                SELECT 
+                    f.id AS id,
+                    f.code AS codeFacture,
+                    f.created_at as createdAt,
+                    c.name as client,
+                    (m.mt_a_payerr - f.remise) AS mt_a_payer,
+                    COALESCE(r.mt_encaisse, 0) AS mt_encaisse,
+                    (m.mt_a_payerr - f.remise - COALESCE(r.mt_encaisse, 0)) AS mt_restant,
+                    u.username as auteur
+                FROM 
+                    claudex_depot.factures f
+                LEFT JOIN 
+                    (SELECT 
+                        facture_id, 
+                        SUM(pv * qte) AS mt_a_payerr 
+                    FROM 
+                        claudex_depot.mouvements 
+                    WHERE 
+                        deleted_by IS NULL 
+                    GROUP BY 
+                        facture_id
+                    ) m ON f.id = m.facture_id
+                LEFT JOIN 
+                    (SELECT 
+                        facture_id, 
+                        SUM(mtpayer) AS mt_encaisse 
+                    FROM 
+                        claudex_depot.reglements 
+                    WHERE 
+                        deleted_by IS NULL 
+                    GROUP BY 
+                        facture_id
+                    ) r ON f.id = r.facture_id
+                LEFT JOIN 
+                    claudex_depot.clients c ON c.id = f.client_id
+                LEFT JOIN 
+                    claudex_depot.users u ON u.id = f.created_by 
+                WHERE 
+                    c.deleted_by IS NULL
+                GROUP BY 
+                    f.id, f.code, f.created_at, c.name, m.mt_a_payerr, r.mt_encaisse, u.username
+            ) as sous_requete
+            WHERE sous_requete.client = ?
+          `,
+          [name]
+        );
+    }
 
     async countFindAllFactureR1() {
         return (await db.claudexBarsDB.query(`
@@ -363,6 +399,234 @@ class FactureRepository {
         );
     }
 
+    async statistitqueListeFacturesRegleNonRegle(date) {
+        return await db.claudexBarsDB.query(
+            `
+            SELECT 
+                CAST(ROW_NUMBER() OVER (ORDER BY f.id) AS VARCHAR(255)) AS id,
+                f.code,
+                f.created_at AS createdAt,
+                c.name AS client,
+                (m.mt_a_payerr - f.remise) AS mt_a_payer,
+                COALESCE(r.mt_encaisse, 0) AS mt_encaisse,
+                (m.mt_a_payerr - f.remise - COALESCE(r.mt_encaisse, 0)) AS mt_restant,
+                u.username AS auteur,
+                CASE 
+                    WHEN (m.mt_a_payerr - f.remise - COALESCE(r.mt_encaisse, 0)) = 0 THEN 'PAYEE'
+                    ELSE 'IMPAYEE'
+                END AS statut
+            FROM 
+                claudex_depot.factures f
+            LEFT JOIN 
+                (SELECT 
+                    facture_id, 
+                    SUM(pv * qte) AS mt_a_payerr 
+                FROM 
+                    claudex_depot.mouvements 
+                WHERE 
+                    deleted_by IS NULL 
+                GROUP BY 
+                    facture_id
+                ) m ON f.id = m.facture_id
+            LEFT JOIN 
+                (SELECT 
+                    facture_id, 
+                    SUM(mtpayer) AS mt_encaisse 
+                FROM 
+                    claudex_depot.reglements 
+                WHERE 
+                    deleted_by IS NULL 
+                GROUP BY 
+                    facture_id
+                ) r ON f.id = r.facture_id
+            LEFT JOIN 
+                claudex_depot.clients c ON c.id = f.client_id
+            LEFT JOIN 
+                claudex_depot.users u ON u.id = f.created_by 
+            WHERE 
+                c.deleted_by IS null
+            AND 
+                f.created_at between ? and ?
+            GROUP BY 
+                f.id, f.code, f.created_at, c.name, m.mt_a_payerr, r.mt_encaisse, u.username
+
+            `,
+            [date.date_debut, date.date_fin]
+        );
+    }
+
+    async statistitqueListeFacturesReglement(date) {
+        return await db.claudexBarsDB.query(
+            `
+            SELECT 
+                CAST(ROW_NUMBER() OVER (ORDER BY f.id) AS VARCHAR(255)) AS id,
+                f.code,
+                f.created_at AS createdAt,
+                c.name AS client,
+                (m.mt_a_payerr - f.remise) AS mt_a_payer,
+                COALESCE(r.mt_encaisse, 0) AS mt_encaisse,
+                (m.mt_a_payerr - f.remise - COALESCE(r.mt_encaisse, 0)) AS mt_restant,
+                r1.created_at AS createdAtReg,
+                u.username AS auteur,
+                CASE 
+                    WHEN (m.mt_a_payerr - f.remise - COALESCE(r.mt_encaisse, 0)) = 0 THEN 'PAYEE'
+                    ELSE 'IMPAYEE'
+                END AS statut
+            FROM 
+                claudex_depot.reglements r1, claudex_depot.factures f
+            LEFT JOIN 
+                (SELECT 
+                    facture_id, 
+                    SUM(pv * qte) AS mt_a_payerr 
+                FROM 
+                    claudex_depot.mouvements 
+                WHERE 
+                    deleted_by IS NULL 
+                GROUP BY 
+                    facture_id
+                ) m ON f.id = m.facture_id
+            LEFT JOIN 
+                (SELECT 
+                    facture_id, 
+                    SUM(mtpayer) AS mt_encaisse 
+                FROM 
+                    claudex_depot.reglements 
+                WHERE 
+                    deleted_by IS NULL 
+                GROUP BY 
+                    facture_id
+                ) r ON f.id = r.facture_id
+            LEFT JOIN 
+                claudex_depot.clients c ON c.id = f.client_id
+            LEFT JOIN 
+                claudex_depot.users u ON u.id = f.created_by 
+            WHERE 
+                c.deleted_by IS null
+            AND 
+                r1.created_at between ? and ?
+            GROUP BY 
+                f.id, f.code, f.created_at, c.name, m.mt_a_payerr, r.mt_encaisse, u.username
+
+            `,
+            [date.date_debut, date.date_fin]
+        );
+    }
+
+    async statistitqueListeFacturesArchivees(date) {
+        return await db.claudexBarsDB.query(
+            `
+            SELECT 
+                CAST(ROW_NUMBER() OVER (ORDER BY f.id) AS VARCHAR(255)) AS id,
+                f.code,
+                f.created_at AS createdAt,
+                f.remise,
+                f.tax,
+                c.name AS client,
+                (m.mt_a_payerr - f.remise) AS mt_a_payer,
+                COALESCE(r.mt_encaisse, 0) AS mt_encaisse,
+                (m.mt_a_payerr - f.remise - COALESCE(r.mt_encaisse, 0)) AS mt_restant
+            FROM 
+                claudex_depot.reglements r1, claudex_depot.factures f
+            LEFT JOIN 
+                (SELECT 
+                    facture_id, 
+                    SUM(pv * qte) AS mt_a_payerr 
+                FROM 
+                    claudex_depot.mouvements 
+                WHERE 
+                    deleted_by IS NULL 
+                GROUP BY 
+                    facture_id
+                ) m ON f.id = m.facture_id
+            LEFT JOIN 
+                (SELECT 
+                    facture_id, 
+                    SUM(mtpayer) AS mt_encaisse 
+                FROM 
+                    claudex_depot.reglements 
+                WHERE 
+                    deleted_by IS NULL 
+                GROUP BY 
+                    facture_id
+                ) r ON f.id = r.facture_id
+            LEFT JOIN 
+                claudex_depot.clients c ON c.id = f.client_id
+            LEFT JOIN 
+                claudex_depot.users u ON u.id = f.created_by 
+            WHERE 
+                c.deleted_by IS null
+            AND 
+                r1.created_at between ? and ?
+            GROUP BY 
+                f.id, f.code, f.created_at, c.name, m.mt_a_payerr, r.mt_encaisse, u.username
+
+            `,
+            [date.date_debut, date.date_fin]
+        );
+    }
+
+    async statistitqueListeFacturesRestePenalite() {
+        return await db.claudexBarsDB.query(
+            `
+            SELECT 
+                f.id AS id,
+                f.code,
+                f.created_at AS createdAt,
+                DATEDIFF(CURDATE(), f.created_at) AS nbJour,
+                f.remise,
+                f.tax,
+                c.name AS client,
+                (m.mt_a_payerr - f.remise) AS mt_a_payer,
+                COALESCE(r.mt_encaisse, 0) AS mt_encaisse,
+                (m.mt_a_payerr - f.remise - COALESCE(r.mt_encaisse, 0)) AS mt_restant
+            FROM 
+                claudex_depot.reglements r1, claudex_depot.factures f
+            LEFT JOIN 
+                (SELECT 
+                    facture_id, 
+                    SUM(pv * qte) AS mt_a_payerr 
+                FROM 
+                    claudex_depot.mouvements 
+                WHERE 
+                    deleted_by IS NULL 
+                GROUP BY 
+                    facture_id
+                ) m ON f.id = m.facture_id
+            LEFT JOIN 
+                (SELECT 
+                    facture_id, 
+                    SUM(mtpayer) AS mt_encaisse 
+                FROM 
+                    claudex_depot.reglements 
+                WHERE 
+                    deleted_by IS NULL 
+                GROUP BY 
+                    facture_id
+                ) r ON f.id = r.facture_id
+            LEFT JOIN 
+                claudex_depot.clients c ON c.id = f.client_id
+            LEFT JOIN 
+                claudex_depot.users u ON u.id = f.created_by 
+            WHERE 
+                c.deleted_by IS null
+            GROUP BY 
+                f.id, f.code, f.created_at, c.name, m.mt_a_payerr, r.mt_encaisse, u.username
+            HAVING 
+                mt_restant > 0
+            `
+        );
+    }
+
+    async statistitqueNbFacturesJours() {
+        return await db.claudexBarsDB.query(
+            `
+            SELECT CAST(count(*) AS VARCHAR(255)) AS nbFactJour 
+            FROM factures
+            WHERE DATE(created_at) = CURDATE()
+            `
+        )[0];
+    }
+
     async statistitqueParProducteurRC(date) {
         return await db.claudexBarsDB.query(
             `
@@ -395,7 +659,7 @@ class FactureRepository {
         );
     }
 
-    async statistitqueListeStockGeneralVenteRC(date) {
+    async statistitqueListeStockGeneralVente(date) {
         return await db.claudexBarsDB.query(
             `
             SELECT CAST(ROW_NUMBER() OVER (ORDER BY produits.name) AS VARCHAR(255)) AS id, produits.name AS produit, models.name AS model, fournisseurs.name AS fournisseur,
@@ -414,13 +678,44 @@ class FactureRepository {
                 AND mouvements.types = 'OUT' then mouvements.qte
                 else 0 
             end) AS qte_stock_vendu, 
-            sum(case mouvements.types when 'OUT' then -1 else 1 end * mouvements.qte) AS qte_stock_restant, produits.stock_min AS seuil
+            sum(case mouvements.types when 'OUT' then -1 else 1 end * mouvements.qte) AS qte_stock_restant, produits.seuil
             FROM mouvements,produits,models, fournisseurs
             WHERE mouvements.produit_id=produits.id 
             AND produits.model_id=models.id
             AND produits.fournisseur_id=fournisseurs.id
             AND mouvements.created_at <= ?
-            AND mouvements.stock= ?
+            GROUP BY produits.id
+            ORDER BY produits.name
+            `,
+            [date.date_debut, date.date_debut, date.date_fin, date.date_debut, date.date_fin, date.date_fin]
+        );
+    }
+
+    async statistitqueListeStockGeneralVenteRC(date) {
+        return await db.claudexBarsDB.query(
+            `
+            SELECT CAST(ROW_NUMBER() OVER (ORDER BY produits.name) AS VARCHAR(255)) AS id, produits.name AS produit, models.name AS model, fournisseurs.name AS fournisseur,
+            sum(case 
+                when mouvements.created_at < '2024-07-01 00:00:00'
+                then case mouvements.types when 'OUT' then -1 else 1 end
+                else 0 
+            END * mouvements.qte) AS qte_stock,
+            sum(case
+                when mouvements.created_at BETWEEN '2024-07-01 00:00:00' AND '2024-07-15 00:00:00'
+                AND mouvements.types = 'ADD' then mouvements.qte
+                else 0 
+            end) AS qte_stock_entree,
+            sum(case 
+                when mouvements.created_at BETWEEN '2024-07-01 00:00:00' AND '2024-07-15 00:00:00'
+                AND mouvements.types = 'OUT' then mouvements.qte
+                else 0 
+            end) AS qte_stock_vendu, 
+            sum(case mouvements.types when 'OUT' then -1 else 1 end * mouvements.qte) AS qte_stock_restant, produits.seuil
+            FROM mouvements,produits,models, fournisseurs
+            WHERE mouvements.produit_id=produits.id 
+            AND produits.model_id=models.id
+            AND produits.fournisseur_id=fournisseurs.id
+            AND mouvements.created_at <= '2024-07-15 00:00:00'
             GROUP BY produits.id
             ORDER BY produits.name
             `,

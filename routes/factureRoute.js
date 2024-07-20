@@ -8,6 +8,7 @@ module.exports = function (app) {
     app.get("/claudex_depot/v1/factures", [authController.verifyToken], factureHandler.findFacture);
     app.put("/claudex_depot/v1/factures", [authController.verifyToken], factureHandler.updateFacture);
     app.get("/claudex_depot/v1/factures/detail", [authController.verifyToken], factureHandler.findAllFactureDetailById);
+    app.get("/claudex_depot/v1/factures/client", [authController.verifyToken], factureHandler.findFactureImpayeeClient);
     app.get("/claudex_depot/v1/factures/all", [authController.verifyToken], factureHandler.findAllFactureR1);
     app.get("/claudex_depot/v1/factures/all/impayee", [authController.verifyToken], factureHandler.findAllFactureImpayee);
     app.get("/claudex_depot/v1/factures/impayee/count", [authController.verifyToken], factureHandler.findCountAllFactureImpaye);
@@ -16,6 +17,13 @@ module.exports = function (app) {
     app.delete("/claudex_depot/v1/factures", [authController.verifyToken], factureHandler.deleteFacture);
     
     // A faire
+    app.post("/claudex_depot/v1/stat/stock/factures", [authController.verifyToken], factureHandler.findAllStatListeFacturesRegleNonRegle);
+    app.post("/claudex_depot/v1/stat/stock/ventes", [authController.verifyToken], factureHandler.findAllStatListeFacturesReglement);
+    app.post("/claudex_depot/v1/stat/stock/factures/archivees", [authController.verifyToken], factureHandler.findAllStatListeFacturesArchivees);
+    app.get("/claudex_depot/v1/stat/stock/factures/penalitees", [authController.verifyToken], factureHandler.findAllStatListeFacturesPenalite);
+    app.post("/claudex_depot/v1/stat/stock/factures/general", [authController.verifyToken], factureHandler.findAllStatListeStockGeneralVente);
+    app.get("/claudex_depot/v1/stock/factures/jour", [authController.verifyToken], factureHandler.findCountFacturesJour);
+
     app.post("/claudex_depot/v1/stat/producteur/r1", [authController.verifyToken], factureHandler.findAllStatParProducteurR1);
     app.post("/claudex_depot/v1/stat/producteur/rc", [authController.verifyToken], factureHandler.findAllStatParProducteurRc);
 
