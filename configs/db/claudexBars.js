@@ -3,11 +3,11 @@ const mariadb = require("mariadb");
 require("dotenv").config();
 
 const claudexBarsDB = mariadb.createPool({
-  host: process.env.CLAUDEX_BARS_HOST,
-  port: process.env.CLAUDEX_BARS_PORT,
-  user: process.env.CLAUDEX_BARS_USER,
-  password: process.env.CLAUDEX_BARS_PASSWORD,
-  database: process.env.CLAUDEX_BARS_NAME,
+  host: process.env.CLAUDEX_DEPOT_HOST,
+  port: process.env.CLAUDEX_DEPOT_PORT,
+  user: process.env.CLAUDEX_DEPOT_USER,
+  password: process.env.CLAUDEX_DEPOT_PASSWORD,
+  database: process.env.CLAUDEX_DEPOT_NAME,
   timezone: 'Z'
 });
 
