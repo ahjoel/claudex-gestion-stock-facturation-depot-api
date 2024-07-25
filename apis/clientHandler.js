@@ -23,6 +23,7 @@ exports.addClient = async (request, response) => {
             );
         }
         const clientObject = {
+            code: request.body.code,
             name: request.body.name,
             description: request.body.description,
             type: request.body.type,

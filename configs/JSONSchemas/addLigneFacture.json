@@ -14,7 +14,7 @@
       "minLength": 1
     },
     "quantity": {
-      "type": "integer",
+      "type": "number",
       "minLength": 1
     }
   },

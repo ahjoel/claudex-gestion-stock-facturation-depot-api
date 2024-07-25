@@ -112,6 +112,34 @@ exports.addMouvementSortieR1 = async (request, response) => {
     }
 };
 
+exports.checkProduitInfo = async (request, response) => {
+    try {
+        const sortieR1Object = {
+            produitId: request.body.produitId,
+        };
+        const infos = await mouvementRepository.findAllVerifierStockR1DispoProduit(sortieR1Object.produitId);
+        
+            sendResponse(
+                response,
+                200,
+                "SUCCESS",
+                "Request executed successfully",
+                {
+                    infos: infos
+                }
+            );
+    } catch (e) {
+        logger.error(request.correlationId + " ==> Error caught in [checkProduitInfo Mouvements] ==> " + e.stack);
+        sendResponse(
+            response,
+            500,
+            "ERROR",
+            "An error occurred while processing the request",
+            null
+        );
+    }
+};
+
 exports.updateMouvementEntreeR1 = async (request, response) => {
     try {
         const entreeR1Object = request.body;

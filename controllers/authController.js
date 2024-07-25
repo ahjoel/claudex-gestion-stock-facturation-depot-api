@@ -3,6 +3,7 @@ const JWTUtilities = require("../utils/JWTUtilities");
 const userRepository = require("../repositories/userRepository");
 const genericResponse = require("../models/genericResponseModel");
 require("dotenv").config();
+var crypto = require('crypto');
 
 class AuthController {
     async authenticateUser(req, res) {
@@ -22,7 +23,20 @@ class AuthController {
 
             logger.info("User found in database.")
 
-            const userInfos = await userRepository.findUserByUsernameAndPassword(req.body.username.trim(), req.body.password.trim());
+            var text = "J'aime réélement JéH0v@h pour ses bienfaits inombrables dans ma vie, je g@rd& un confiance |absolue|."
+
+            // On définit notre algorithme de cryptage
+            var algorithm = 'aes256';
+    
+            // Notre clé de chiffrement, elle est souvent générée aléatoirement mais elle doit être la même pour le décryptage
+            var password = req.body.password.trim();
+    
+            // On crypte notre texte
+            var cipher = crypto.createCipher(algorithm, password);
+            var crypted = cipher.update(text,'utf8','hex');
+            crypted += cipher.final('hex');
+            console.log("pass ::", crypted);
+            const userInfos = await userRepository.findUserByUsernameAndPassword(req.body.username.trim(), crypted);
 
             if (userInfos.length > 0) {    
                 const token = JWTUtilities.generateToken(userInfos[0].id, process.env.JWT_EXPIRATION_DELAY.toString());

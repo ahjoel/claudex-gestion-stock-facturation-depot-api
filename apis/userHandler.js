@@ -4,6 +4,7 @@ const JsonValidator = require("ajv");
 const jsonValidator = new JsonValidator();
 const genericJsonResponse = require('../models/genericResponseModel');
 const userRepository = require("../repositories/userRepository");
+var crypto = require('crypto');
 
 function sendResponse(response, status, message, description, data, httpStatus) {
     httpStatus = httpStatus != null ? httpStatus : status;

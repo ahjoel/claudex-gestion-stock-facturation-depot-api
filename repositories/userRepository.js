@@ -1,5 +1,6 @@
 const db = require("../configs/db/claudexBars");
-
+require("dotenv").config();
+var crypto = require('crypto');
 class UserRepository {
     async findUserByUsername(username) {
         return await db.claudexBarsDB.query(`SELECT u.id,
@@ -36,10 +37,15 @@ class UserRepository {
     }
 
     async save(user) {
+        var text = process.env.KEY_PASS_SECRET
+        var algorithm = process.env.ALGO
+        var cipher = crypto.createCipher(algorithm, user.password)
+        var crypted = cipher.update(text,'utf8','hex')
+        crypted += cipher.final('hex')
         return await db.claudexBarsDB.query(
             `INSERT INTO users(username, email, firstname, lastname, password, created_at, created_by, profile)
              VALUES (?, ?, ?, ?, ?,now(), ?, ?)`,
-            [user.username, user.email, user.firstname, user.lastname, user.password, user.createdBy, user.profile]
+            [user.username, user.email, user.firstname, user.lastname, crypted, user.createdBy, user.profile]
         );
     }
 
@@ -66,14 +72,19 @@ class UserRepository {
     }
 
     async update(user) {
+        var text = process.env.KEY_PASS_SECRET
+        var algorithm = 'aes256';
+        var cipher = crypto.createCipher(algorithm, user.password);
+        var crypted = cipher.update(text,'utf8','hex');
+        crypted += cipher.final('hex');
         return await db.claudexBarsDB.query(
             `UPDATE users
              SET username   = CASE WHEN ? IS NOT NULL THEN UPPER(?) ELSE username END,
                  email      = CASE WHEN ? IS NOT NULL THEN ? ELSE email END,
                  firstname  = CASE WHEN ? IS NOT NULL THEN ? ELSE firstname END,
                  lastname   = CASE WHEN ? IS NOT NULL THEN ? ELSE lastname END,
-                 profile = CASE WHEN ? IS NOT NULL THEN ? ELSE profile END,
-                 password = CASE WHEN ? IS NOT NULL THEN ? ELSE password END,
+                 profile    = CASE WHEN ? IS NOT NULL THEN ? ELSE profile END,
+                 password   = CASE WHEN ? IS NOT NULL THEN ? ELSE password END,
                  updated_at = now(),
                  updated_by = ?
              WHERE id = ?
@@ -84,7 +95,7 @@ class UserRepository {
                 user.firstname, user.firstname,
                 user.lastname, user.lastname,
                 user.profile, user.profile,
-                user.password, user.password,
+                crypted, crypted,
                 user.updatedBy,
                 user.id
             ]

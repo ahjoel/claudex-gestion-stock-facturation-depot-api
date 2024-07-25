@@ -9,6 +9,7 @@ module.exports = function (app) {
     app.put("/claudex_depot/v1/entreer1", [authController.verifyToken], mouvementEntreeR1Handler.updateMouvementEntreeR1);
     app.get("/claudex_depot/v1/entreer1/all", [authController.verifyToken], mouvementEntreeR1Handler.findAllMouvementEntreeR1);
     app.post("/claudex_depot/v1/entreer1/produit/all", [authController.verifyToken], mouvementEntreeR1Handler.findAllMouvementEntreeR1DispoByProduit);
+    app.post("/claudex_depot/v1/entreer1/produit/info", [authController.verifyToken], mouvementEntreeR1Handler.checkProduitInfo);
     app.get("/claudex_depot/v1/codefacture", [authController.verifyToken], mouvementEntreeR1Handler.findCodeFacture);
     app.get("/claudex_depot/v1/entreer1/all/dispo", [authController.verifyToken], mouvementEntreeR1Handler.findAllMouvementEntreeR1Dispo);
     app.delete("/claudex_depot/v1/entreer1", [authController.verifyToken], mouvementEntreeR1Handler.deleteMouvementEntreeR1);
