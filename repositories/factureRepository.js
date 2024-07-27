@@ -23,6 +23,13 @@ class FactureRepository {
         ))[0];
     }
 
+    async findByIdForClient(id) {
+        return (await db.claudexBarsDB.query(
+            "SELECT code FROM clients WHERE id = ?",
+            [id]
+        ))[0];
+    }
+
     async findByIdReglement(id) {
         return (await db.claudexBarsDB.query(
             "SELECT id, facture_id, totalFacture, created_at AS createdAt, created_by AS createdBy, updated_at As updatedAt, updated_by AS updatedBy FROM reglements WHERE id = ?",
@@ -62,11 +69,17 @@ class FactureRepository {
     async findAllFacturesR1(limit, offset) {
         return await db.claudexBarsDB.query(
             `
-            SELECT f2.id as id, f2.code as code, c1.name as client,f2.client_id as client_id, f2.remise as remise, f2.created_at AS createdAt, f2.tax as taxe, cast(count(m.produit_id) as varchar(50)) as nbproduit, sum(m.pv * m.qte) AS totalfacture
+            SELECT f2.id as id, f2.code as code, c1.name as client,f2.client_id as client_id, f2.remise as remise, f2.created_at AS createdAt, f2.tax as taxe, cast(count(m.produit_id) as varchar(50)) as nbproduit, sum(m.pv * m.qte) AS totalfacture,
+            CASE 
+                WHEN r.facture_id IS NOT NULL 
+                THEN 'modifiee'
+                ELSE 'intact'
+            END AS etatFacture
             FROM mouvements m
             INNER join factures f2 on m.facture_id = f2.id 
             INNER JOIN produits p2 on m.produit_id = p2.id
             INNER JOIN clients c1 ON f2.client_id = c1.id
+            LEFT JOIN reglements r ON r.facture_id = f2.id
             AND m.deleted_at IS NULL
             GROUP BY f2.id 
             ORDER by f2.id desc
@@ -485,7 +498,7 @@ class FactureRepository {
                 GROUP BY 
                     facture_id
                 ) m ON f.id = m.facture_id
-            LEFT JOIN 
+            INNER JOIN 
                 (SELECT 
                     facture_id, 
                     SUM(mtpayer) AS mt_encaisse 

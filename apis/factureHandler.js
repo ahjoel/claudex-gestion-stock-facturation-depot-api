@@ -22,13 +22,12 @@ exports.addFacture = async (request, response) => {
                 null
             );
         }
-        const client_id = request.body.client_id.split('-')[0];
-        const client_code = request.body.client_id.split('-')[1];
-
+        const client_id = request.body.client_id;
         let code_clt = request.body.code
-        const parts = code_clt.split("/");
-        parts.splice(1, 0, client_code);
-        code_clt = parts.join("/");
+        const firstSlashIndex = code_clt.indexOf('/');
+        const secondSlashIndex = code_clt.indexOf('/', firstSlashIndex + 1);
+        const code_client = await factureRepository.findByIdForClient(request.body.client_id);
+        code_clt = code_clt.slice(0, secondSlashIndex + 1) + code_client?.code + '/'+ code_clt.slice(secondSlashIndex + 1);
 
         const factureObject = {
             code: code_clt,
