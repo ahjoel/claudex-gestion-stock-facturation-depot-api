@@ -569,7 +569,7 @@ class FactureRepository {
             WHERE 
                 c.deleted_by IS null
             AND 
-                r1.created_at between ? and ?
+                f.created_at between ? and ?
             GROUP BY 
                 f.id, f.code, f.created_at, c.name, m.mt_a_payerr, r.mt_encaisse, u.username
 
