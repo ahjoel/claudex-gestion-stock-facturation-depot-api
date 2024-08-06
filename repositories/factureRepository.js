@@ -132,7 +132,7 @@ class FactureRepository {
             GROUP BY 
                 f.id, f.code, f.created_at, c.name, m.Mt_a_payerr, r.mt_encaisse, u.username
             HAVING 
-                mt_a_payer > 0
+                mt_a_payer > 0 and mt_restant > 0
             ORDER BY 
                 f.id DESC
 
