@@ -250,8 +250,8 @@ class ReglementRepository {
       await db.claudexBarsDB.query(`
         SELECT CAST(SUM(mtpayer) AS VARCHAR(255)) AS reglementDayTotalNumber 
         FROM reglements
-        WHERE YEAR(reglements.created_at) = YEAR(CURDATE())
-        AND day (reglements.created_at) = day(CURDATE());
+        WHERE YEAR(reglements.created_at) = YEAR(CURDATE()-1)
+        AND day (reglements.created_at) = day(CURDATE()-1);
         `)
     )[0];
   }

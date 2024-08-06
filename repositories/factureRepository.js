@@ -476,50 +476,22 @@ class FactureRepository {
                 f.code,
                 f.created_at AS createdAt,
                 c.name AS client,
-                (m.mt_a_payerr - f.remise) AS mt_a_payer,
-                COALESCE(r.mt_encaisse, 0) AS mt_encaisse,
-                (m.mt_a_payerr - f.remise - COALESCE(r.mt_encaisse, 0)) AS mt_restant,
-                r1.created_at AS createdAtReg,
-                u.username AS auteur,
-                CASE 
-                    WHEN (m.mt_a_payerr - f.remise - COALESCE(r.mt_encaisse, 0)) = 0 THEN 'PAYEE'
-                    ELSE 'IMPAYEE'
-                END AS statut
+                r1.mtpayer AS mt_regle,
+                r1.created_at AS createdAtReg
             FROM 
-                claudex_depot.reglements r1, claudex_depot.factures f
-            LEFT JOIN 
-                (SELECT 
-                    facture_id, 
-                    SUM(pv * qte) AS mt_a_payerr 
-                FROM 
-                    claudex_depot.mouvements 
-                WHERE 
-                    deleted_by IS NULL 
-                GROUP BY 
-                    facture_id
-                ) m ON f.id = m.facture_id
+                claudex_depot.factures f
             INNER JOIN 
-                (SELECT 
-                    facture_id, 
-                    SUM(mtpayer) AS mt_encaisse 
-                FROM 
-                    claudex_depot.reglements 
-                WHERE 
-                    deleted_by IS NULL 
-                GROUP BY 
-                    facture_id
-                ) r ON f.id = r.facture_id
-            LEFT JOIN 
+                claudex_depot.reglements r1 ON f.id = r1.facture_id
+            INNER JOIN 
                 claudex_depot.clients c ON c.id = f.client_id
-            LEFT JOIN 
+            INNER JOIN 
                 claudex_depot.users u ON u.id = f.created_by 
             WHERE 
                 c.deleted_by IS null
             AND 
                 r1.created_at between ? and ?
             GROUP BY 
-                f.id, f.code, f.created_at, c.name, m.mt_a_payerr, r.mt_encaisse, u.username
-
+                f.id, f.code, f.created_at, c.name, u.username
             `,
             [date.date_debut, date.date_fin]
         );
@@ -635,7 +607,7 @@ class FactureRepository {
             `
             SELECT CAST(count(*) AS VARCHAR(255)) AS nbFactJour 
             FROM factures
-            WHERE DATE(created_at) = CURDATE()
+            WHERE DATE(created_at) = CURDATE() - 1
             `
         )[0];
     }
