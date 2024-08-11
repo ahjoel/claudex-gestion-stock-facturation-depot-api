@@ -611,13 +611,11 @@ class FactureRepository {
     }
 
     async statistitqueNbFacturesJours() {
-        return await db.claudexBarsDB.query(
-            `
-            SELECT CAST(count(*) AS VARCHAR(255)) AS nbFactJour 
-            FROM factures
-            WHERE DATE(created_at) = CURDATE() - 1
-            `
-        )[0];
+        return (await db.claudexBarsDB.query(`
+            SELECT CAST(count(f.id) AS VARCHAR(255)) AS nbFactJour
+            FROM factures f
+            WHERE DATE(f.created_at) = CURDATE();
+        `))[0];
     }
 
     async statistitqueParProducteurRC(date) {

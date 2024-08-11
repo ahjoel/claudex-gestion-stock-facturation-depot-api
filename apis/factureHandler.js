@@ -840,7 +840,8 @@ exports.findAllStatListeStockGeneralVente = async (request, response) => {
 exports.findCountFacturesJour = async (request, response) => {
     try {
         const factureDuJourCount = await factureRepository.statistitqueNbFacturesJours();
-  
+        console.log("fact : ", factureDuJourCount);
+        
         return sendResponse(
             response,
             200,
