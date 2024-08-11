@@ -29,8 +29,17 @@ exports.addFacture = async (request, response) => {
         const code_client = await factureRepository.findByIdForClient(request.body.client_id);
         code_clt = code_clt.slice(0, secondSlashIndex + 1) + code_client?.code + '/'+ code_clt.slice(secondSlashIndex + 1);
 
+        const parts = code_clt.split('/');
+        const resultC = parts.slice(0, 2).join('/');
+
+        const countData = await factureRepository.countAllFactureR1();
+        const countDataFact = Number(countData?.code)
+
+        const realCode = resultC + "/" + code_client?.code + "/" + countDataFact
+        
+
         const factureObject = {
-            code: code_clt,
+            code: realCode,
             client_id: Number(client_id),
             tax: Number(request.body.tax),
             remise: request.body.remise,

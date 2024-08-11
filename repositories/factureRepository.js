@@ -292,6 +292,14 @@ class FactureRepository {
         `))[0];
     }
 
+    async countAllFactureR1() {
+        return (await db.claudexBarsDB.query(`
+            SELECT CAST(SUBSTRING_INDEX(f.code, '/', -1) AS UNSIGNED) + 1 AS code
+            FROM factures f
+            WHERE f.id = (SELECT MAX(id) FROM factures);
+        `))[0];
+    }
+
     async countFindAllFactureImpayee() {
         return (await db.claudexBarsDB.query(`
         SELECT CAST(count(sous_requete.id) AS VARCHAR(255)) AS factureTotalImpayeNumber 
